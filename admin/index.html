@@ -1358,8 +1358,18 @@ $('exportExcel').addEventListener('click',()=>{
 </script>
 <script>
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js');
+  window.addEventListener('load', async () => {
+    try {
+      await navigator.serviceWorker.register('./sw.js', { scope: './' });
+      await navigator.serviceWorker.ready;
+
+      if (!navigator.serviceWorker.controller && !sessionStorage.getItem('adminSwReloaded')) {
+        sessionStorage.setItem('adminSwReloaded', '1');
+        location.reload();
+      }
+    } catch (e) {
+      console.error('Service Worker Admin gagal:', e);
+    }
   });
 }
 </script>
