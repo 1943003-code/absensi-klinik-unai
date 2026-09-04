@@ -1,5 +1,5 @@
-const CACHE_NAME='absensi-unai-pwa-v1';
-const APP_SHELL=['/','/index.html','/manifest.webmanifest','/icon-192.png','/icon-512.png'];
+const CACHE_NAME='admin-absensi-unai-v1';
+const APP_SHELL=['/admin/','/admin/index.html','/admin/manifest.webmanifest','/icon-192.png','/icon-512.png'];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)));
@@ -8,7 +8,9 @@ self.addEventListener('install', event => {
 
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))))
+    caches.keys().then(keys => Promise.all(
+      keys.filter(k => k.startsWith('admin-absensi-unai-') && k !== CACHE_NAME).map(k => caches.delete(k))
+    ))
   );
   self.clients.claim();
 });
@@ -22,6 +24,6 @@ self.addEventListener('fetch', event => {
         caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy)).catch(()=>{});
         return response;
       })
-      .catch(() => caches.match(event.request).then(r => r || caches.match('/index.html')))
+      .catch(() => caches.match(event.request).then(r => r || caches.match('/admin/index.html')))
   );
 });

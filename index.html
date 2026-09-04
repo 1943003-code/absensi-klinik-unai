@@ -4,8 +4,8 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <meta name="theme-color" content="#0f766e"/>
-<title>Absensi Karyawan Klinik Pratama Universitas Advent Indonesia</title>
-<script src="./config.js"></script>
+<title>Admin Absensi UNAI</title>
+<script src="/config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
@@ -62,7 +62,7 @@ th{background:#f9fafb;font-size:12px;text-transform:uppercase;color:#475467}
 }
 </style>
 
-<link rel="manifest" href="/manifest.webmanifest">
+<link rel="manifest" href="/admin/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -547,7 +547,7 @@ window.addEventListener('pageshow',()=>{
 // Karyawan selalu membuka halaman absensi biasa.
 // Login admin hanya tersedia melalui URL khusus: ?admin=login
 const params=new URLSearchParams(location.search);
-const adminRoute=params.get('admin')==='login';
+const adminRoute=(params.get('admin')==='login') || location.pathname.startsWith('/admin');
 
 if(adminRoute){
   openTab('admin');
@@ -1364,7 +1364,7 @@ $('exportExcel').addEventListener('click',()=>{
 
 <div id="pwaInstallWrap" style="position:fixed;right:14px;bottom:14px;z-index:9998;display:none">
   <button id="pwaInstallBtn" class="btn primary" style="box-shadow:0 8px 24px rgba(0,0,0,.18)">
-    📲 <span id="pwaInstallLabel">Install Absensi UNAI</span>
+    📲 <span id="pwaInstallLabel">Install Admin Absensi UNAI</span>
   </button>
 </div>
 
@@ -1373,7 +1373,7 @@ let deferredPwaPrompt = null;
 const adminInstallRoute = new URLSearchParams(location.search).get('admin') === 'login';
 window.addEventListener('DOMContentLoaded', () => {
   const label = document.getElementById('pwaInstallLabel');
-  if (label) label.textContent = adminInstallRoute ? 'Install Admin Absensi UNAI' : 'Install Absensi UNAI';
+  if (label) label.textContent = adminInstallRoute ? 'Install Admin Absensi UNAI' : 'Install Admin Absensi UNAI';
 });
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
@@ -1397,7 +1397,7 @@ document.addEventListener('click', async (e) => {
 });
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(console.error);
+    navigator.serviceWorker.register('/admin/sw.js', {scope:'/admin/'}).catch(console.error);
   });
 }
 </script>
