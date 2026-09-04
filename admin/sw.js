@@ -1,4 +1,4 @@
-const CACHE_NAME = 'admin-absensi-unai-v4';
+const CACHE_NAME = 'admin-absensi-unai-v5';
 
 const APP_SHELL = [
   './',
