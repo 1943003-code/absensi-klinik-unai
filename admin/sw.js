@@ -1,4 +1,4 @@
-const CACHE_NAME='admin-absensi-unai-v1';
+const CACHE_NAME='admin-absensi-unai-v3';
 const APP_SHELL=['/admin/','/admin/index.html','/admin/manifest.webmanifest','/icon-192.png','/icon-512.png'];
 
 self.addEventListener('install', event => {
