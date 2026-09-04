@@ -1364,7 +1364,7 @@ $('exportExcel').addEventListener('click',()=>{
 
 <div id="pwaInstallWrap" style="position:fixed;right:14px;bottom:14px;z-index:9998;display:none">
   <button id="pwaInstallBtn" class="btn primary" style="box-shadow:0 8px 24px rgba(0,0,0,.18)">
-    📲 <span id="pwaInstallLabel">Install Admin Absensi UNAI</span>
+    📲 <span id="pwaInstallLabel">Install Absensi Karyawan UNAI</span>
   </button>
 </div>
 
@@ -1373,7 +1373,7 @@ let deferredPwaPrompt = null;
 const adminInstallRoute = new URLSearchParams(location.search).get('admin') === 'login';
 window.addEventListener('DOMContentLoaded', () => {
   const label = document.getElementById('pwaInstallLabel');
-  if (label) label.textContent = adminInstallRoute ? 'Install Admin Absensi UNAI' : 'Install Admin Absensi UNAI';
+  if (label) label.textContent = adminInstallRoute ? ''Install Absensi Karyawan UNAI'' : 'Install Admin Absensi UNAI';
 });
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
