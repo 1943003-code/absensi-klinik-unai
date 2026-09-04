@@ -1,10 +1,10 @@
 {
-  "id": "/admin/",
+  "id": "./",
   "name": "Admin Absensi UNAI",
   "short_name": "Admin Absensi",
   "description": "Panel Administrator Absensi Klinik Pratama Universitas Advent Indonesia",
-  "start_url": "/admin/",
-  "scope": "/admin/",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#f5f7fb",
   "theme_color": "#0f766e",
