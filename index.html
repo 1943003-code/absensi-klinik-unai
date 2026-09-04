@@ -1373,7 +1373,7 @@ let deferredPwaPrompt = null;
 const adminInstallRoute = new URLSearchParams(location.search).get('admin') === 'login';
 window.addEventListener('DOMContentLoaded', () => {
   const label = document.getElementById('pwaInstallLabel');
-  if (label) label.textContent = adminInstallRoute ? ''Install Absensi Karyawan UNAI'' : 'Install Admin Absensi UNAI';
+  if (label) label.textContent = adminInstallRoute ? 'Install Admin Absensi UNAI' : 'Install Absensi Karyawan UNAI';
 });
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
