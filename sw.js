@@ -1,4 +1,4 @@
-const CACHE_NAME = 'absensi-karyawan-unai-v3';
+const CACHE_NAME = 'absensi-karyawan-unai-v4';
 
 const APP_SHELL = [
   './',
