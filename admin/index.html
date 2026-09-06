@@ -180,6 +180,11 @@ th{background:#f9fafb;font-size:12px;text-transform:uppercase;color:#475467}
         <button id="login" class="btn primary">Login</button>
         <button id="logout" class="btn secondary">Logout</button>
       </div>
+      <div class="actions" style="margin-top:10px">
+  <button id="installAppBtn" class="btn secondary" style="display:none;">
+    📥 Install Aplikasi Admin
+  </button>
+      </div>
       <div id="authStatus" class="status">Belum login.</div>
     </div>
 
@@ -2215,6 +2220,39 @@ $('exportExcel').addEventListener('click',()=>{
   XLSX.utils.book_append_sheet(wb,ws,'Rekap Absensi');
   XLSX.writeFile(wb,`Rekap_Absensi_${$('dateFrom').value}_sd_${$('dateTo').value}.xlsx`);
 });
+  let deferredInstallPrompt = null;
+const installAppBtn = document.getElementById('installAppBtn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  if (installAppBtn) installAppBtn.style.display = 'inline-flex';
+});
+
+if (installAppBtn) {
+  installAppBtn.addEventListener('click', async () => {
+    if (!deferredInstallPrompt) {
+      alert('Jika tombol install belum tersedia, buka menu Chrome lalu pilih Instal aplikasi / Tambahkan ke layar utama.');
+      return;
+    }
+
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    installAppBtn.style.display = 'none';
+  });
+}
+
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+  if (installAppBtn) installAppBtn.style.display = 'none';
+});
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js');
+  });
+}
 </script>
 </body>
 </html>
