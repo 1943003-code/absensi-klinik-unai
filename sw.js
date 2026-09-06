@@ -1,4 +1,4 @@
-const CACHE_NAME = 'absensi-karyawan-unai-v6';
+const CACHE_NAME = 'absensi-karyawan-unai-v17-prod';
 
 const APP_SHELL = [
   './manifest.webmanifest',
@@ -29,7 +29,7 @@ self.addEventListener('fetch', event => {
   const isHtml = event.request.mode === 'navigate' || url.pathname.endsWith('/') || url.pathname.endsWith('/index.html');
   const isConfig = url.pathname.endsWith('/config.js');
 
-  // HTML dan config.js selalu network-first agar update GitHub Pages langsung terbaca.
+  // Halaman utama dan config selalu network-first agar versi produksi terbaru langsung terbaca.
   if (sameOrigin && (isHtml || isConfig)) {
     event.respondWith(
       fetch(event.request, { cache: 'no-store' })
