@@ -1,13 +1,13 @@
 {
   "id": "./",
-  "name": "Absensi Karyawan Klinik Pratama UNAI",
+  "name": "Absensi Karyawan Klinik UNAI",
   "short_name": "Absensi UNAI",
   "description": "Aplikasi Absensi Karyawan Klinik Pratama Universitas Advent Indonesia",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f5f7fb",
-  "theme_color": "#0f766e",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
   "orientation": "portrait-primary",
   "icons": [
     {
