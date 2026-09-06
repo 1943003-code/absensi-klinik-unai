@@ -1,0 +1,2011 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="theme-color" content="#0f766e"/>
+<title>Login Admin UNAI V12</title>
+<script src="../config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--text:#132238;--muted:#667085;--line:#e4e7ec;--brand:#0f766e;--brand2:#0d9488;--danger:#b42318;--ok:#067647}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.wrap{max-width:1180px;margin:auto;padding:18px}
+.hero{padding:22px;border-radius:18px;background:linear-gradient(135deg,#0f766e,#155e75);color:#fff;margin-bottom:16px}
+.hero h1{margin:0 0 6px;font-size:26px}.hero p{margin:0;opacity:.9}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+.tabs button,.btn{border:0;border-radius:10px;padding:11px 14px;font-weight:700;cursor:pointer}
+.tabs button{background:#fff;color:#344054;border:1px solid var(--line)}
+.tabs button.active,.btn.primary{background:var(--brand);color:white}
+.btn.secondary{background:#fff;border:1px solid var(--line);color:#344054}
+.btn.out{background:#155e75;color:white}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}
+input,select{width:100%;padding:11px;border:1px solid #d0d5dd;border-radius:9px;font-size:16px;background:#fff}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.hidden{display:none!important}
+.status{padding:13px;border-radius:10px;margin:12px 0;background:#f2f4f7}
+.status.ok{background:#ecfdf3;color:var(--ok)}
+.status.err{background:#fef3f2;color:var(--danger)}
+.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
+table{width:100%;border-collapse:collapse;min-width:900px}
+th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{background:#f9fafb;font-size:12px;text-transform:uppercase;color:#475467}
+.pill{padding:5px 8px;border-radius:999px;font-size:12px;font-weight:700;background:#ecfdf3;color:#067647}
+.metric{background:#f9fafb;border:1px solid var(--line);padding:12px;border-radius:12px}
+.metric b{display:block;font-size:21px;margin-top:5px}
+.small{font-size:12px;color:var(--muted)}
+.absenbox{max-width:620px;margin:0 auto}
+.absen-title{text-align:center;margin-bottom:14px}
+.absen-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.absen-actions button{min-height:52px;font-size:16px}
+.qrbox{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+#commonQr{background:#fff;padding:8px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;min-width:256px;min-height:256px}
+#commonQr img{display:block;width:240px;height:240px}
+.codehint{font-size:13px;color:var(--muted);margin-top:5px}
+.emp-actions{display:flex;gap:6px;flex-wrap:wrap}
+.btn.smallbtn{padding:7px 10px;font-size:12px}
+.btn.warn{background:#fff7ed;color:#9a3412;border:1px solid #fed7aa}
+.btn.dark{background:#344054;color:#fff}
+.modalback{position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9999}
+.modal{background:#fff;border-radius:16px;padding:18px;width:min(560px,100%);max-height:90vh;overflow:auto}
+.modal h3{margin-top:0}
+
+@media(max-width:720px){
+  .grid,.grid4,.absen-actions{grid-template-columns:1fr}
+  .hero h1{font-size:22px}.wrap{padding:10px}
+}
+
+.roster-select{min-width:74px;padding:6px;font-size:12px;border-radius:7px}
+.roster-changed{outline:2px solid #f59e0b;background:#fffbeb}
+#rosterTable th:first-child,#rosterTable td:first-child{position:sticky;left:0;z-index:2;background:#fff}
+#rosterTable thead th{position:sticky;top:0;z-index:3}
+#rosterTable thead th:first-child{z-index:4;background:#f9fafb}
+#rosterTable td,#rosterTable th{padding:6px}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+    <h1 id="appName">Absensi Karyawan Klinik Pratama Universitas Advent Indonesia</h1>
+    <p>QR Absensi • Shift & Keterlambatan • Izin/Cuti/Sakit • Koreksi • Rekap Bulanan • Excel/PDF • Backup</p>
+  </section>
+
+  <div class="tabs">
+    <button data-tab="attendance" class="hidden">🕒 Absensi</button>
+    <button data-tab="dashboard" class="admin-only hidden">📋 Dashboard</button>
+    <button data-tab="admin" class="admin-only hidden">🔐 Admin</button>
+    <button data-tab="employees" class="admin-only hidden">👥 Karyawan</button>
+    <button data-tab="shifts" class="admin-only hidden">🗓️ Shift</button>
+    <button data-tab="leave" class="admin-only hidden">📝 Izin/Cuti</button>
+    <button data-tab="correction" class="admin-only hidden">✏️ Koreksi</button>
+    <button data-tab="monthly" class="admin-only hidden">📅 Rekap Bulanan</button>
+    <button data-tab="backup" class="admin-only hidden">💾 Backup</button>
+    <button data-tab="report" class="admin-only hidden">📊 Laporan</button>
+  </div>
+
+  <section id="tab-attendance" class="hidden">
+    <div class="card absenbox">
+      <div class="absen-title">
+        <h2>Absensi Karyawan</h2>
+        <p class="small">Masukkan Username dan PIN pribadi.</p>
+      </div>
+      <div class="grid">
+        <div>
+          <label>Username</label>
+          <input id="attUsername" name="employee_username_absensi" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" data-lpignore="true" data-1p-ignore placeholder="Contoh: debora">
+        </div>
+        <div>
+          <label>PIN</label>
+          <input id="attPin" name="employee_pin_absensi" type="text" inputmode="numeric" maxlength="6" autocomplete="off" autocorrect="off" spellcheck="false" data-lpignore="true" data-1p-ignore style="-webkit-text-security:disc" placeholder="4–6 digit">
+        </div>
+      </div>
+      <div class="absen-actions">
+        <button id="checkIn" class="btn primary">Absen Masuk</button>
+        <button id="checkOut" class="btn out">Absen Keluar</button>
+      </div>
+      <div id="attStatus" class="status">Silakan isi Username dan PIN.</div>
+    </div>
+  </section>
+
+  <section id="tab-dashboard" class="hidden">
+    <div class="card">
+      <div class="actions" style="justify-content:space-between">
+        <div>
+          <h2 style="margin:0 0 4px">Dashboard Admin</h2>
+          <div class="small" id="dashboardDate">Ringkasan absensi hari ini</div>
+        </div>
+        <button id="refreshDashboard" class="btn secondary">Muat Ulang</button>
+      </div>
+    </div>
+
+    <div class="grid4">
+      <div class="metric">Karyawan aktif<b id="dActive">0</b></div>
+      <div class="metric">Sudah masuk<b id="dIn">0</b></div>
+      <div class="metric">Sudah keluar<b id="dOut">0</b></div>
+      <div class="metric">Belum keluar<b id="dOpen">0</b></div>
+    </div>
+
+    <div class="grid" style="margin-top:10px">
+      <div class="metric">Total durasi kerja hari ini<b id="dDuration">00:00:00</b></div>
+      <div class="metric">Belum absen masuk<b id="dAbsent">0</b></div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h3>Absensi Hari Ini</h3>
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Nama</th>
+              <th>Bagian</th>
+              <th>Jam Masuk</th>
+              <th>Jam Keluar</th>
+              <th>Total Durasi</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="dashboardBody"></tbody>
+        </table>
+      </div>
+      <div id="dashboardStatus" class="status">Login admin diperlukan.</div>
+    </div>
+  </section>
+
+  <section id="tab-admin">
+    <div class="card">
+      <h2>Login Admin</h2><div class="small" style="margin-bottom:10px">Versi Admin V12 • Rekap Bulanan Ringkas</div>
+      <div class="grid">
+        <div><label>Email</label><input id="email" name="adm_login_email_x" type="email" autocomplete="off" autocorrect="off" spellcheck="false" data-lpignore="true" data-1p-ignore placeholder="Email admin"></div>
+        <div><label>Password</label><input id="password" name="adm_login_password_x" type="password" autocomplete="new-password" data-lpignore="true" data-1p-ignore placeholder="Password admin"></div>
+      </div>
+      <div class="actions" style="margin-top:12px">
+        <button id="login" class="btn primary">Login</button>
+        <button id="logout" class="btn secondary">Logout</button>
+      </div>
+      <div id="authStatus" class="status">Belum login.</div>
+    </div>
+
+    <div class="card">
+      <h2>Kelola Akun Admin</h2>
+      <p class="small">Hanya admin aktif yang dapat membuat akun admin baru.</p>
+      <div class="grid">
+        <div>
+          <label>Nama Admin</label>
+          <input id="newAdminName" autocomplete="off" placeholder="Nama lengkap admin">
+        </div>
+        <div>
+          <label>Email Admin</label>
+          <input id="newAdminEmail" type="email" autocomplete="off" placeholder="admin@contoh.com">
+        </div>
+        <div>
+          <label>Password</label>
+          <input id="newAdminPassword" type="password" autocomplete="new-password" placeholder="Minimal 8 karakter">
+        </div>
+        <div>
+          <label>Ulangi Password</label>
+          <input id="newAdminPassword2" type="password" autocomplete="new-password" placeholder="Ulangi password">
+        </div>
+      </div>
+      <div class="actions" style="margin-top:12px">
+        <button id="createAdminAccount" class="btn primary">Tambah Akun Admin</button>
+        <button id="reloadAdmins" class="btn secondary">Muat Ulang</button>
+      </div>
+      <div id="adminAccountStatus" class="status">Login admin diperlukan.</div>
+
+      <div class="tablewrap" style="margin-top:12px">
+        <table style="min-width:620px">
+          <thead>
+            <tr><th>Nama</th><th>Email</th><th>Status</th><th>Dibuat</th></tr>
+          </thead>
+          <tbody id="adminAccountBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>QR Umum Absensi</h2>
+      <p class="small">Setelah aplikasi sudah online HTTPS, buat dan download QR ini. Tempel 1 QR di lokasi absensi. QR akan membuka halaman absensi untuk semua karyawan.</p>
+      <div class="actions">
+        <button id="makeCommonQr" class="btn primary">Buat QR Umum</button>
+        <button id="downloadCommonQr" class="btn secondary">Download QR PNG</button>
+      </div>
+      <div id="commonQrStatus" class="status">QR belum dibuat.</div>
+      <div class="qrbox">
+        <div id="commonQr"></div>
+        <div>
+          <b>Alamat QR Umum</b>
+          <div id="commonQrUrl" class="small" style="max-width:520px;overflow-wrap:anywhere"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-employees" class="hidden">
+    <div class="card">
+      <h2>Master Karyawan</h2>
+      <div class="grid4">
+        <div><label>Username</label><input id="empUsername" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="contoh: debora"></div>
+        <div><label>Nama lengkap</label><input id="empName"></div>
+        <div><label>Bagian/Unit</label><input id="empDept"></div>
+        <div><label>Jabatan</label><input id="empPosition"></div>
+      </div>
+      <div class="grid" style="margin-top:10px">
+        <div>
+          <label>PIN awal (4–6 digit)</label>
+          <input id="empPin" type="password" inputmode="numeric" maxlength="6" placeholder="Contoh: 1234">
+          <div class="codehint">PIN disimpan dalam bentuk hash di database, bukan teks biasa.</div>
+        </div>
+      </div>
+      <div class="actions" style="margin-top:12px">
+        <button id="saveEmp" class="btn primary">Simpan Karyawan</button>
+        <button id="reloadEmp" class="btn secondary">Muat Ulang</button>
+      </div>
+      <div id="empStatus" class="status">Login admin diperlukan.</div>
+    </div>
+
+    <div class="card">
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Username</th><th>Nama</th><th>Bagian</th><th>Jabatan</th><th>PIN</th><th>Status</th><th>Aksi</th></tr></thead>
+          <tbody id="empBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-report" class="hidden">
+    <div class="card">
+      <h2>Laporan Absensi</h2>
+      <div class="grid4">
+        <div><label>Dari tanggal</label><input id="dateFrom" type="date"></div>
+        <div><label>Sampai tanggal</label><input id="dateTo" type="date"></div>
+        <div><label>Nama/username</label><input id="searchName" placeholder="Semua karyawan"></div>
+        <div style="display:flex;align-items:end">
+          <div class="actions">
+            <button id="loadReport" class="btn primary">Tampilkan</button>
+            <button id="exportExcel" class="btn secondary">Export Excel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="grid4">
+      <div class="metric">Jumlah baris<b id="mRows">0</b></div>
+      <div class="metric">Total durasi<b id="mHours">00:00:00</b></div>
+      <div class="metric">Masuk lengkap<b id="mComplete">0</b></div>
+      <div class="metric">Belum keluar<b id="mOpen">0</b></div>
+    </div>
+    <div class="card">
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Tanggal</th><th>Username</th><th>Nama</th><th>Bagian</th><th>Jam Masuk</th><th>Jam Keluar</th><th>Total Durasi (HH:MM:SS)</th><th>Decimal</th></tr></thead>
+          <tbody id="reportBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+
+  <section id="tab-shifts" class="hidden">
+    <div class="card">
+      <h2>Shift & Jadwal Kerja</h2>
+      <p class="small">Atur jam masuk/pulang, lalu susun roster jadwal bulanan per tanggal untuk seluruh karyawan.</p>
+      <div class="grid4">
+        <div><label>Nama Shift</label><input id="shiftName" placeholder="Contoh: Shift Pagi"></div>
+        <div><label>Jam Masuk</label><input id="shiftStart" type="time" value="08:00"></div>
+        <div><label>Jam Pulang</label><input id="shiftEnd" type="time" value="16:00"></div>
+        <div><label>Toleransi Terlambat (menit)</label><input id="shiftLateTol" type="number" min="0" max="180" value="0"></div>
+      </div>
+      <div class="actions" style="margin-top:12px">
+        <button id="saveShift" class="btn primary">Simpan Shift</button>
+        <button id="resetShift" class="btn secondary">Form Baru</button>
+      </div>
+      <div id="shiftStatus" class="status">Silakan buat shift.</div>
+      <input id="shiftEditId" type="hidden">
+    </div>
+
+    <div class="card">
+      <h3>Daftar Shift</h3>
+      <div class="tablewrap"><table>
+        <thead><tr><th>Shift</th><th>Masuk</th><th>Pulang</th><th>Toleransi</th><th>Status</th><th>Aksi</th></tr></thead>
+        <tbody id="shiftBody"></tbody>
+      </table></div>
+    </div>
+
+    <div class="card">
+      <h3>Jadwal Bulanan Karyawan</h3>
+      <p class="small">Pilih bulan, lalu isi AM / PM / N / Libur per tanggal. Shift malam dicatat pada tanggal mulai shift.</p>
+      <div class="grid4">
+        <div><label>Bulan Jadwal</label><input id="rosterMonth" type="month"></div>
+        <div style="display:flex;align-items:end"><button id="loadRoster" class="btn secondary">Muat Jadwal</button></div>
+        <div style="display:flex;align-items:end"><button id="saveRoster" class="btn primary">Simpan Perubahan</button></div>
+        <div style="display:flex;align-items:end"><button id="clearRosterChanges" class="btn secondary">Batalkan Perubahan</button></div>
+      </div>
+      <div id="scheduleStatus" class="status">Pilih bulan lalu klik Muat Jadwal.</div>
+      <div class="tablewrap" style="margin-top:12px;max-height:70vh">
+        <table id="rosterTable" style="min-width:1800px">
+          <thead id="rosterHead"></thead>
+          <tbody id="rosterBody"></tbody>
+        </table>
+      </div>
+      <div class="small" style="margin-top:8px">Kosong = belum dijadwalkan. Libur = hari libur resmi karyawan.</div>
+    </div>
+  </section>
+
+  <section id="tab-leave" class="hidden">
+    <div class="card">
+      <h2>Izin • Sakit • Cuti • Dinas • Libur</h2>
+      <div class="grid4">
+        <div><label>Karyawan</label><select id="leaveEmployee"></select></div>
+        <div><label>Jenis</label><select id="leaveType"><option>Izin</option><option>Sakit</option><option>Cuti</option><option>Dinas</option><option>Libur</option></select></div>
+        <div><label>Dari tanggal</label><input id="leaveStart" type="date"></div>
+        <div><label>Sampai tanggal</label><input id="leaveEnd" type="date"></div>
+      </div>
+      <div style="margin-top:12px"><label>Keterangan</label><input id="leaveNotes" placeholder="Opsional"></div>
+      <div class="actions" style="margin-top:12px">
+        <button id="saveLeave" class="btn primary">Simpan</button>
+        <button id="resetLeave" class="btn secondary">Form Baru</button>
+      </div>
+      <input id="leaveEditId" type="hidden">
+      <div id="leaveStatus" class="status">Silakan masukkan data izin/cuti/sakit.</div>
+    </div>
+    <div class="card">
+      <div class="tablewrap"><table>
+        <thead><tr><th>Karyawan</th><th>Jenis</th><th>Dari</th><th>Sampai</th><th>Keterangan</th><th>Aksi</th></tr></thead>
+        <tbody id="leaveBody"></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <section id="tab-correction" class="hidden">
+    <div class="card">
+      <h2>Koreksi Absensi oleh Admin</h2>
+      <p class="small">Setiap koreksi disimpan ke riwayat audit.</p>
+      <div class="grid4">
+        <div><label>Karyawan</label><select id="corrEmployee"></select></div>
+        <div><label>Tanggal Masuk</label><input id="corrDateIn" type="date"></div>
+        <div><label>Sesi Absen</label><select id="corrSession"><option value="">Klik Muat Data</option></select></div>
+        <div><label>Jam Masuk</label><input id="corrIn" type="time" step="1"></div>
+      </div>
+      <div class="grid4" style="margin-top:12px">
+        <div><label>Tanggal Keluar</label><input id="corrDateOut" type="date"></div>
+        <div><label>Jam Keluar</label><input id="corrOut" type="time" step="1"></div>
+      </div>
+      <div style="margin-top:12px"><label>Alasan Koreksi</label><input id="corrReason" placeholder="Wajib diisi, contoh: lupa absen keluar"></div>
+      <div class="actions" style="margin-top:12px">
+        <button id="loadCorrection" class="btn secondary">Muat Data</button>
+        <button id="saveCorrection" class="btn primary">Simpan Koreksi</button>
+        <button id="deleteCorrectionSession" class="btn warn">🗑️ Hapus Sesi</button>
+      </div>
+      <div id="corrStatus" class="status">Pilih karyawan dan Tanggal Masuk.</div>
+    </div>
+    <div class="card">
+      <h3>Riwayat Koreksi Terbaru</h3>
+      <div class="tablewrap"><table>
+        <thead><tr><th>Waktu</th><th>Karyawan</th><th>Tanggal</th><th>Sebelum</th><th>Sesudah</th><th>Alasan</th></tr></thead>
+        <tbody id="correctionBody"></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <section id="tab-monthly" class="hidden">
+    <div class="card">
+      <h2>Rekap Bulanan Lengkap</h2>
+      <div class="grid4">
+        <div><label>Bulan</label><input id="monthlyMonth" type="month"></div>
+        <div><label>Karyawan</label><select id="monthlyEmployee"><option value="">Semua Karyawan</option></select></div>
+        <div style="display:flex;align-items:end"><button id="loadMonthly" class="btn primary">Tampilkan</button></div>
+        <div style="display:flex;align-items:end"><div class="actions"><button id="monthlyExcel" class="btn secondary">Excel</button><button id="monthlyPdf" class="btn secondary">PDF</button></div></div>
+      </div>
+      <div id="monthlyStatus" class="status">Pilih bulan lalu klik Tampilkan.</div>
+    </div>
+    <div class="grid4">
+      <div class="metric">Hari hadir<b id="mmPresent">0</b></div>
+      <div class="metric">Terlambat<b id="mmLate">0</b></div>
+      <div class="metric">Izin/Sakit/Cuti<b id="mmLeave">0</b></div>
+      <div class="metric">Total jam kerja<b id="mmHours">00:00:00</b></div>
+    </div>
+    <div class="card"><div class="tablewrap"><table style="min-width:1200px">
+      <thead><tr><th>Tanggal Masuk</th><th>Username</th><th>Nama</th><th>Shift</th><th>Jadwal</th><th>Jam Masuk</th><th>Tanggal Keluar</th><th>Jam Keluar</th><th>Durasi</th><th>Terlambat</th><th>Lembur</th><th>Sesi</th><th>Status</th></tr></thead>
+      <tbody id="monthlyBody"></tbody>
+    </table></div></div>
+  </section>
+
+  <section id="tab-backup" class="hidden">
+    <div class="card">
+      <h2>Backup Data</h2>
+      <p>Backup akan mengunduh data utama aplikasi dalam satu file JSON. File ini dapat disimpan di komputer/drive sebagai cadangan.</p>
+      <div class="actions">
+        <button id="backupJson" class="btn primary">Download Backup JSON</button>
+        <button id="backupExcel" class="btn secondary">Download Backup Excel</button>
+      </div>
+      <div id="backupStatus" class="status">Belum ada proses backup.</div>
+    </div>
+  </section>
+
+  <div id="employeeModal" class="modalback hidden" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="employeeModalTitle">
+      <h3 id="employeeModalTitle">Edit Karyawan</h3>
+      <div class="grid">
+        <div><label>Username</label><input id="editUsername" autocomplete="off" autocapitalize="none" spellcheck="false"></div>
+        <div><label>Nama lengkap</label><input id="editName"></div>
+        <div><label>Bagian/Unit</label><input id="editDept"></div>
+        <div><label>Jabatan</label><input id="editPosition"></div>
+      </div>
+      <div class="actions" style="margin-top:14px">
+        <button id="saveEmployeeEdit" class="btn primary">Simpan Perubahan</button>
+        <button id="cancelEmployeeEdit" class="btn secondary">Batal</button>
+      </div>
+      <div id="editEmployeeStatus" class="status">Silakan edit data.</div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+/* Fallback absensi karyawan: tidak bergantung pada ES Module/CDN Supabase JS */
+(function(){
+  function byId(id){ return document.getElementById(id); }
+
+  function setStatus(text, ok){
+    var e=byId('attStatus');
+    if(!e) return;
+    e.textContent=text;
+    e.className='status '+(ok===true?'ok':ok===false?'err':'');
+  }
+
+  async function attendanceRest(action){
+    var C=window.APP_CONFIG||{};
+    var username=(byId('attUsername')?.value||'').trim().toLowerCase();
+    var pin=(byId('attPin')?.value||'').trim();
+
+    if(!/^[a-z0-9._-]{3,30}$/.test(username) || !/^\d{4,6}$/.test(pin)){
+      setStatus('Isi Username yang valid dan PIN 4–6 digit.',false);
+      return;
+    }
+
+    if(!C.SUPABASE_URL || !C.SUPABASE_ANON_KEY){
+      setStatus('Aplikasi belum terhubung ke Supabase.',false);
+      return;
+    }
+
+    var inBtn=byId('checkIn'), outBtn=byId('checkOut');
+    if(inBtn) inBtn.disabled=true;
+    if(outBtn) outBtn.disabled=true;
+    setStatus(action==='IN'?'Memproses absen masuk...':'Memproses absen keluar...',null);
+
+    var controller=new AbortController();
+    var timer=setTimeout(function(){ controller.abort(); },15000);
+
+    try{
+      var response=await fetch(
+        C.SUPABASE_URL.replace(/\/$/,'')+'/rest/v1/rpc/attendance_by_username_pin',
+        {
+          method:'POST',
+          headers:{
+            'Content-Type':'application/json',
+            'apikey':C.SUPABASE_ANON_KEY,
+            'Authorization':'Bearer '+C.SUPABASE_ANON_KEY
+          },
+          body:JSON.stringify({
+            p_username:username,
+            p_pin:pin,
+            p_action:action
+          }),
+          signal:controller.signal
+        }
+      );
+
+      var raw=await response.text();
+      var data=null;
+      try{ data=raw?JSON.parse(raw):null; }catch(_){ data=raw; }
+
+      if(!response.ok){
+        var detail=(data && (data.message||data.error_description||data.hint)) || ('HTTP '+response.status);
+        throw new Error(detail);
+      }
+
+      if(Array.isArray(data) && data.length===1) data=data[0];
+
+      var message=(data && data.message) ? data.message : 'Absensi berhasil';
+      if(data && data.name) message+=' — '+data.name;
+      if(data && data.time) message+=' • '+data.time;
+
+      setStatus(message, data && Object.prototype.hasOwnProperty.call(data,'ok') ? !!data.ok : true);
+
+      if(!data || data.ok!==false){
+        if(byId('attPin')) byId('attPin').value='';
+      }
+    }catch(err){
+      if(err && err.name==='AbortError'){
+        setStatus('Gagal absensi: koneksi terlalu lama. Coba lagi.',false);
+      }else{
+        setStatus('Gagal absensi: '+(err?.message||String(err)),false);
+      }
+    }finally{
+      clearTimeout(timer);
+      if(inBtn) inBtn.disabled=false;
+      if(outBtn) outBtn.disabled=false;
+    }
+  }
+
+  window.__attendanceFallbackAttached=true;
+  window.employeeAttendanceRest=attendanceRest;
+
+  document.addEventListener('DOMContentLoaded',function(){
+    var inBtn=byId('checkIn'), outBtn=byId('checkOut'), pin=byId('attPin');
+    if(inBtn) inBtn.addEventListener('click',function(){ attendanceRest('IN'); });
+    if(outBtn) outBtn.addEventListener('click',function(){ attendanceRest('OUT'); });
+    if(pin) pin.addEventListener('keydown',function(e){
+      if(e.key==='Enter') attendanceRest('IN');
+    });
+  });
+})();
+</script>
+
+<script>
+const createClient = window.supabase.createClient;
+const QRCodeGen = window.QRCode;
+
+const C=window.APP_CONFIG||{};
+const $=id=>document.getElementById(id);
+$('appName').textContent='Absensi Karyawan Klinik Pratama Universitas Advent Indonesia';
+
+const configured=C.SUPABASE_URL && !C.SUPABASE_URL.includes('PROJECT_ID') &&
+  C.SUPABASE_ANON_KEY && !C.SUPABASE_ANON_KEY.includes('PASTE_');
+const sb=configured?createClient(C.SUPABASE_URL,C.SUPABASE_ANON_KEY,{
+  auth:{
+    persistSession:false,
+    autoRefreshToken:true,
+    detectSessionInUrl:false
+  }
+}):null;
+
+let reportRows=[], commonQrDataUrl='', editingEmployeeId=null;
+
+const msg=(id,text,ok)=>{
+  const e=$(id); e.textContent=text;
+  e.className='status '+(ok===true?'ok':ok===false?'err':'');
+};
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const escAttr=esc;
+const fmtTime=v=>v?new Date(v).toLocaleTimeString('id-ID',{
+  hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false,timeZone:'Asia/Jakarta'
+}):'-';
+
+const durationSeconds=r=>{
+  if(!r?.check_in || !r?.check_out) return 0;
+  const a=new Date(r.check_in).getTime();
+  const b=new Date(r.check_out).getTime();
+  if(!Number.isFinite(a)||!Number.isFinite(b)||b<a) return 0;
+  return Math.floor((b-a)/1000);
+};
+
+const fmtDurationSeconds=sec=>{
+  sec=Math.max(0,Math.floor(Number(sec)||0));
+  const h=Math.floor(sec/3600);
+  const m=Math.floor((sec%3600)/60);
+  const s=sec%60;
+  return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+};
+
+function openTab(name){
+  document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x.dataset.tab===name));
+  ['attendance','dashboard','admin','employees','shifts','leave','correction','monthly','backup','report'].forEach(t=>$('tab-'+t).classList.toggle('hidden',t!==name));
+  if(name==='dashboard') loadDashboard();
+  if(name==='employees') loadEmployees();
+  if(name==='report') loadReport();
+  if(name==='shifts') loadShiftModule();
+  if(name==='leave') loadLeaveModule();
+  if(name==='correction') loadCorrectionModule();
+  if(name==='monthly') prepareMonthlyModule();
+}
+
+function setAdminUi(isAdmin){
+  document.querySelectorAll('.admin-only').forEach(el=>el.classList.toggle('hidden',!isAdmin));
+  if(!isAdmin && ['dashboard','admin','employees','shifts','leave','correction','monthly','backup','report'].some(t=>!$('tab-'+t).classList.contains('hidden'))){
+    openTab('attendance');
+  }
+}
+document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>openTab(b.dataset.tab)));
+
+if(!configured){
+  msg('attStatus','Aplikasi belum terhubung Supabase. Isi config.js terlebih dahulu.',false);
+  msg('authStatus','Isi SUPABASE_URL dan SUPABASE_ANON_KEY di config.js.',false);
+}
+
+setAdminUi(false);
+
+function clearAttendanceAutofill(){
+  const code=$('attUsername');
+  const pin=$('attPin');
+  if(code) code.value='';
+  if(pin) pin.value='';
+}
+
+function clearAdminAutofill(){
+  if($('email')) $('email').value='';
+  if($('password')) $('password').value='';
+}
+
+clearAttendanceAutofill();
+clearAdminAutofill();
+
+window.addEventListener('pageshow',()=>{
+  setTimeout(()=>{
+    clearAttendanceAutofill();
+    clearAdminAutofill();
+  },80);
+});
+
+// Karyawan selalu membuka halaman absensi biasa.
+// Login admin hanya tersedia melalui URL khusus: ?admin=login
+const params=new URLSearchParams(location.search);
+// File khusus admin-login.html: selalu buka Login Admin.
+const adminRoute=true;
+
+if(adminRoute){
+  openTab('admin');
+}else{
+  openTab('attendance');
+}
+
+async function doAttendance(action){
+  if(!sb)return;
+  const username=$('attUsername').value.trim().toLowerCase();
+  const pin=$('attPin').value.trim();
+  if(!/^[a-z0-9._-]{3,30}$/.test(username) || !/^\d{4,6}$/.test(pin)){
+    msg('attStatus','Isi Username yang valid dan PIN 4–6 digit.',false); return;
+  }
+  $('checkIn').disabled=true; $('checkOut').disabled=true;
+  try{
+    const {data,error}=await sb.rpc('attendance_by_username_pin',{
+      p_username:username,p_pin:pin,p_action:action
+    });
+    if(error)throw error;
+    msg('attStatus',
+      (data?.message||'Selesai')+
+      (data?.name?' — '+data.name:'')+
+      (data?.time?' • '+data.time:''),
+      !!data?.ok
+    );
+    if(data?.ok)$('attPin').value='';
+  }catch(e){
+    msg('attStatus','Gagal absensi: '+e.message,false);
+  }finally{
+    $('checkIn').disabled=false; $('checkOut').disabled=false;
+  }
+}
+if(!window.__attendanceFallbackAttached){
+  $('checkIn').addEventListener('click',()=>doAttendance('IN'));
+  $('checkOut').addEventListener('click',()=>doAttendance('OUT'));
+  $('attPin').addEventListener('keydown',e=>{if(e.key==='Enter')doAttendance('IN')});
+}
+
+$('login').addEventListener('click',async()=>{
+  if(!sb){
+    msg('authStatus','Supabase belum terhubung. Periksa config.js.',false);
+    return;
+  }
+
+  $('login').disabled=true;
+  msg('authStatus','Memproses login...',null);
+
+  const {error}=await sb.auth.signInWithPassword({
+    email:$('email').value.trim(),
+    password:$('password').value
+  });
+
+  if(error){
+    $('login').disabled=false;
+    msg('authStatus','Login gagal: '+error.message,false);
+    setAdminUi(false);
+    return;
+  }
+
+  const {data:isAdmin,error:roleError}=await sb.rpc('is_admin');
+
+  if(roleError || isAdmin!==true){
+    await sb.auth.signOut();
+    $('login').disabled=false;
+    msg('authStatus','Akun ini tidak memiliki akses Admin.',false);
+    setAdminUi(false);
+    return;
+  }
+
+  $('login').disabled=false;
+  msg('authStatus','Login admin berhasil.',true);
+  setAdminUi(true);
+  openTab('dashboard');
+  loadEmployees();
+  loadReport();
+  loadAdminAccounts();
+});
+$('logout').addEventListener('click',async()=>{
+  if(sb)await sb.auth.signOut();
+  clearAdminAutofill();
+  msg('authStatus','Sudah logout.',null);
+  setAdminUi(false);
+  history.replaceState(null,'',location.pathname);
+  openTab('admin');
+});
+
+$('saveEmp').addEventListener('click',async()=>{
+  if(!sb)return;
+  const username=$('empUsername').value.trim().toLowerCase();
+  const row={
+    username,
+    employee_code:username.toUpperCase(),
+    full_name:$('empName').value.trim(),
+    department:$('empDept').value.trim()||null,
+    position:$('empPosition').value.trim()||null
+  };
+  const pin=$('empPin').value.trim();
+  if(!/^[a-z0-9._-]{3,30}$/.test(username)){
+    msg('empStatus','Username harus 3–30 karakter: huruf kecil, angka, titik, garis bawah, atau tanda minus.',false); return;
+  }
+  if(!row.full_name){
+    msg('empStatus','Nama lengkap wajib diisi.',false); return;
+  }
+  if(!/^\d{4,6}$/.test(pin)){
+    msg('empStatus','PIN awal harus 4–6 digit angka.',false); return;
+  }
+  const {error}=await sb.from('employees').insert(row);
+  if(error){msg('empStatus',error.message,false);return}
+  const {data:pinData,error:pinError}=await sb.rpc('admin_set_employee_pin_by_username',{
+    p_username:row.username,p_pin:pin
+  });
+  if(pinError || !pinData?.ok){
+    msg('empStatus','Karyawan tersimpan, tetapi PIN gagal diatur: '+(pinError?.message||pinData?.message||'Error'),false);
+    return;
+  }
+  msg('empStatus','Karyawan berhasil disimpan dan PIN sudah dibuat.',true);
+  ['empUsername','empName','empDept','empPosition','empPin'].forEach(id=>$(id).value='');
+  loadEmployees();
+});
+
+$('reloadEmp').addEventListener('click',loadEmployees);
+
+async function loadEmployees(){
+  if(!sb)return;
+  const {data,error}=await sb.from('employees')
+    .select('id,username,employee_code,full_name,department,position,active,pin_hash')
+    .order('full_name');
+  if(error){msg('empStatus','Login admin diperlukan / '+error.message,false);return}
+
+  msg('empStatus',data.length+' karyawan dimuat.',true);
+
+  $('empBody').innerHTML=data.map(r=>`
+    <tr>
+      <td>${esc(r.username||r.employee_code)}</td>
+      <td>${esc(r.full_name)}</td>
+      <td>${esc(r.department||'')}</td>
+      <td>${esc(r.position||'')}</td>
+      <td>
+        <button class="btn secondary smallbtn pinb" data-username="${escAttr(r.username||r.employee_code)}">
+          ${r.pin_hash?'Ubah PIN':'Atur PIN'}
+        </button>
+      </td>
+      <td><span class="pill">${r.active?'Aktif':'Nonaktif'}</span></td>
+      <td>
+        <div class="emp-actions">
+          <button class="btn secondary smallbtn editb"
+            data-id="${r.id}"
+            data-username="${escAttr(r.username||'')}"
+            data-name="${escAttr(r.full_name||'')}"
+            data-dept="${escAttr(r.department||'')}"
+            data-position="${escAttr(r.position||'')}">Edit</button>
+          <button class="btn warn smallbtn activeb"
+            data-id="${r.id}"
+            data-active="${r.active?'true':'false'}">
+            ${r.active?'Nonaktifkan':'Aktifkan'}
+          </button>
+          <button class="btn danger smallbtn deleteb"
+            data-id="${r.id}"
+            data-name="${escAttr(r.full_name||r.username||'Karyawan')}">Hapus</button>
+        </div>
+      </td>
+    </tr>`).join('');
+
+  document.querySelectorAll('.pinb').forEach(b=>
+    b.addEventListener('click',()=>changePin(b.dataset.username)));
+
+  document.querySelectorAll('.editb').forEach(b=>
+    b.addEventListener('click',()=>openEmployeeEdit(b)));
+
+  document.querySelectorAll('.activeb').forEach(b=>
+    b.addEventListener('click',()=>toggleEmployeeActive(b.dataset.id,b.dataset.active==='true')));
+
+  document.querySelectorAll('.deleteb').forEach(b=>
+    b.addEventListener('click',()=>deleteEmployee(b.dataset.id,b.dataset.name)));
+}
+
+async function changePin(username){
+  const pin=prompt('Masukkan PIN baru 4–6 digit untuk '+username+':');
+  if(pin===null)return;
+  if(!/^\d{4,6}$/.test(pin)){alert('PIN harus 4–6 digit angka.');return}
+  const {data,error}=await sb.rpc('admin_set_employee_pin_by_username',{p_username:username,p_pin:pin});
+  if(error){alert(error.message);return}
+  alert(data?.message||'PIN diperbarui.');
+  loadEmployees();
+}
+
+function openEmployeeEdit(button){
+  editingEmployeeId=button.dataset.id;
+  $('editUsername').value=button.dataset.username||'';
+  $('editName').value=button.dataset.name||'';
+  $('editDept').value=button.dataset.dept||'';
+  $('editPosition').value=button.dataset.position||'';
+  $('employeeModal').classList.remove('hidden');
+  $('employeeModal').setAttribute('aria-hidden','false');
+  msg('editEmployeeStatus','Silakan edit data.',null);
+}
+
+function closeEmployeeEdit(){
+  editingEmployeeId=null;
+  $('employeeModal').classList.add('hidden');
+  $('employeeModal').setAttribute('aria-hidden','true');
+}
+
+$('cancelEmployeeEdit').addEventListener('click',closeEmployeeEdit);
+
+$('saveEmployeeEdit').addEventListener('click',async()=>{
+  if(!editingEmployeeId)return;
+
+  const username=$('editUsername').value.trim().toLowerCase();
+  const fullName=$('editName').value.trim();
+  const department=$('editDept').value.trim();
+  const position=$('editPosition').value.trim();
+
+  if(!/^[a-z0-9._-]{3,30}$/.test(username)){
+    msg('editEmployeeStatus','Username harus 3–30 karakter: huruf kecil, angka, titik, garis bawah, atau tanda minus.',false);
+    return;
+  }
+  if(!fullName){
+    msg('editEmployeeStatus','Nama lengkap wajib diisi.',false);
+    return;
+  }
+
+  const {data,error}=await sb.rpc('admin_update_employee',{
+    p_employee_id:editingEmployeeId,
+    p_username:username,
+    p_full_name:fullName,
+    p_department:department||null,
+    p_position:position||null
+  });
+
+  if(error){
+    msg('editEmployeeStatus',error.message,false);
+    return;
+  }
+  if(!data?.ok){
+    msg('editEmployeeStatus',data?.message||'Gagal memperbarui karyawan.',false);
+    return;
+  }
+
+  msg('editEmployeeStatus','Data karyawan berhasil diperbarui.',true);
+  setTimeout(()=>{
+    closeEmployeeEdit();
+    loadEmployees();
+    loadReport();
+  },400);
+});
+
+async function toggleEmployeeActive(id,isActive){
+  const next=!isActive;
+  const label=next?'mengaktifkan':'menonaktifkan';
+  if(!confirm('Yakin ingin '+label+' karyawan ini?'))return;
+
+  const {data,error}=await sb.rpc('admin_set_employee_active',{
+    p_employee_id:id,
+    p_active:next
+  });
+
+  if(error){alert(error.message);return}
+  if(!data?.ok){alert(data?.message||'Gagal mengubah status.');return}
+  loadEmployees();
+}
+
+async function deleteEmployee(id,name){
+  const ok=confirm(
+    'Hapus karyawan "'+name+'"?\\n\\n'+
+    'Jika karyawan sudah memiliki riwayat absensi, penghapusan akan ditolak agar laporan lama tetap aman. '+
+    'Gunakan Nonaktifkan untuk karyawan yang sudah pernah absen.'
+  );
+  if(!ok)return;
+
+  const {data,error}=await sb.rpc('admin_delete_employee_safe',{
+    p_employee_id:id
+  });
+
+  if(error){alert(error.message);return}
+  alert(data?.message||'Selesai.');
+  if(data?.ok)loadEmployees();
+}
+
+
+function jakartaDateString(){
+  const parts=new Intl.DateTimeFormat('en-CA',{
+    timeZone:'Asia/Jakarta',
+    year:'numeric',month:'2-digit',day:'2-digit'
+  }).formatToParts(new Date());
+  const get=t=>parts.find(p=>p.type===t)?.value||'';
+  return `${get('year')}-${get('month')}-${get('day')}`;
+}
+
+function dashboardDateLabel(dateStr){
+  const [y,m,d]=dateStr.split('-').map(Number);
+  const dt=new Date(Date.UTC(y,m-1,d,12,0,0));
+  return new Intl.DateTimeFormat('id-ID',{
+    timeZone:'Asia/Jakarta',
+    weekday:'long',day:'2-digit',month:'long',year:'numeric'
+  }).format(dt);
+}
+
+function addDaysJakartaDate(dateStr,days){
+  const [y,m,d]=dateStr.split('-').map(Number);
+  const dt=new Date(Date.UTC(y,m-1,d+days,12,0,0));
+  return new Intl.DateTimeFormat('en-CA',{
+    timeZone:'Asia/Jakarta',
+    year:'numeric',month:'2-digit',day:'2-digit'
+  }).format(dt);
+}
+
+function jakartaDateFromTimestamp(v){
+  if(!v)return null;
+  const parts=new Intl.DateTimeFormat('en-CA',{
+    timeZone:'Asia/Jakarta',
+    year:'numeric',month:'2-digit',day:'2-digit'
+  }).formatToParts(new Date(v));
+  const get=t=>parts.find(p=>p.type===t)?.value||'';
+  return `${get('year')}-${get('month')}-${get('day')}`;
+}
+
+async function loadDashboard(){
+  if(!sb)return;
+
+  const today=jakartaDateString();
+  const yesterday=addDaysJakartaDate(today,-1);
+
+  $('dashboardDate').textContent=dashboardDateLabel(today);
+  msg('dashboardStatus','Memuat dashboard langsung dari data absensi termasuk shift malam...',null);
+
+  const [empRes,attRes]=await Promise.all([
+    sb.from('employees')
+      .select('id,username,employee_code,full_name,department,position,active')
+      .eq('active',true)
+      .order('full_name'),
+    sb.from('attendance')
+      .select('id,employee_id,work_date,check_in,check_out,notes')
+      .gte('work_date',yesterday)
+      .lte('work_date',today)
+      .order('check_in',{ascending:true})
+  ]);
+
+  if(empRes.error){
+    msg('dashboardStatus','Gagal memuat karyawan: '+empRes.error.message,false);
+    return;
+  }
+  if(attRes.error){
+    msg('dashboardStatus','Gagal memuat absensi: '+attRes.error.message,false);
+    return;
+  }
+
+  const employees=empRes.data||[];
+
+  // Dashboard hari ini:
+  // 1. semua sesi dengan work_date hari ini
+  // 2. sesi kemarin yang masih terbuka
+  // 3. sesi kemarin yang jam keluarnya jatuh pada hari ini (shift lintas tanggal)
+  const attendance=(attRes.data||[]).filter(r=>{
+    if(r.work_date===today)return true;
+    if(r.work_date!==yesterday)return false;
+    if(r.check_in && !r.check_out)return true;
+    return !!(r.check_out && jakartaDateFromTimestamp(r.check_out)===today);
+  });
+
+  const sessionsByEmployee=new Map();
+  attendance.forEach(r=>{
+    const key=String(r.employee_id||'').toLowerCase();
+    if(!key)return;
+    if(!sessionsByEmployee.has(key))sessionsByEmployee.set(key,[]);
+    sessionsByEmployee.get(key).push(r);
+  });
+
+  const rows=employees.map(emp=>{
+    const sessions=(sessionsByEmployee.get(String(emp.id||'').toLowerCase())||[])
+      .sort((a,b)=>new Date(a.check_in||0)-new Date(b.check_in||0));
+
+    const todaySessions=sessions.filter(s=>s.work_date===today);
+    const overnightSessions=sessions.filter(s=>s.work_date===yesterday);
+
+    const firstIn=sessions.find(s=>s.check_in)?.check_in||null;
+
+    const openToday=todaySessions.find(s=>s.check_in&&!s.check_out)||null;
+
+    const closed=sessions
+      .filter(s=>s.check_in&&s.check_out)
+      .sort((a,b)=>new Date(a.check_out)-new Date(b.check_out));
+
+    const lastOut=closed.length?closed[closed.length-1].check_out:null;
+    const totalSeconds=sessions.reduce((sum,s)=>sum+durationSeconds(s),0);
+
+    const hasOvernight=overnightSessions.length>0;
+    const overnightFinishedToday=overnightSessions.some(
+      s=>s.check_in&&s.check_out&&jakartaDateFromTimestamp(s.check_out)===today
+    );
+
+    // Jika ada sesi shift malam yang sudah selesai hari ini, abaikan record open lama/duplikat
+    // dari work_date kemarin agar status tidak salah menjadi "Sedang Bekerja".
+    const overnightOpenRaw=overnightSessions.find(s=>s.check_in&&!s.check_out)||null;
+    const overnightOpen=overnightFinishedToday ? null : overnightOpenRaw;
+
+    const effectiveOpen=openToday||overnightOpen||null;
+
+    return {
+      emp,sessions,todaySessions,overnightSessions,
+      firstIn,lastOut,open:effectiveOpen,totalSeconds,
+      hasOvernight,overnightOpen:!!overnightOpen,overnightFinishedToday
+    };
+  });
+
+  const active=employees.length;
+  const inCount=rows.filter(x=>x.firstIn).length;
+  const outCount=rows.filter(x=>x.sessions.some(s=>s.check_out)).length;
+  const openCount=rows.filter(x=>x.open).length;
+  const absent=rows.filter(x=>!x.firstIn).length;
+  const totalSeconds=rows.reduce((sum,x)=>sum+x.totalSeconds,0);
+
+  $('dActive').textContent=active;
+  $('dIn').textContent=inCount;
+  $('dOut').textContent=outCount;
+  $('dOpen').textContent=openCount;
+  $('dAbsent').textContent=absent;
+  $('dDuration').textContent=fmtDurationSeconds(totalSeconds);
+
+  $('dashboardBody').innerHTML=rows.map(x=>{
+    const {
+      emp,sessions,firstIn,lastOut,open,totalSeconds,
+      overnightOpen,overnightFinishedToday
+    }=x;
+
+    let statusHtml='';
+
+    const todayOpenSession=(x.todaySessions||[])
+      .filter(s=>s.check_in&&!s.check_out)
+      .sort((a,b)=>new Date(b.check_in)-new Date(a.check_in))[0]||null;
+
+    const todayClosedSessions=(x.todaySessions||[])
+      .filter(s=>s.check_in&&s.check_out)
+      .sort((a,b)=>new Date(a.check_in)-new Date(b.check_in));
+
+    // Tampilan baris memprioritaskan sesi BARU yang dimulai hari ini.
+    // Contoh Grace:
+    // 05/09 23:00 -> 06/09 07:04 selesai.
+    // 06/09 23:00 masuk lagi => baris langsung menampilkan 23:00 -> -
+    // dan status "Sedang Bekerja • Shift Malam".
+    let displayIn=firstIn;
+    let displayOut=lastOut;
+
+    if(todayOpenSession){
+      displayIn=todayOpenSession.check_in;
+      displayOut=null;
+
+      const hour=Number(new Intl.DateTimeFormat('en-GB',{
+        timeZone:'Asia/Jakarta',
+        hour:'2-digit',
+        hour12:false
+      }).format(new Date(todayOpenSession.check_in)));
+
+      if(hour>=18 || hour<5){
+        statusHtml='<span class="pill" style="background:#fff7ed;color:#9a3412">Sedang Bekerja • Shift Malam</span>';
+      }else{
+        statusHtml=`<span class="pill" style="background:#fff7ed;color:#9a3412">Belum Keluar • ${(x.todaySessions||[]).length} sesi</span>`;
+      }
+    }else if(overnightFinishedToday){
+      statusHtml=`<span class="pill" style="background:#eff8ff;color:#175cd3">Selesai Shift Malam • ${x.overnightSessions.length} sesi</span>`;
+    }else if(overnightOpen){
+      statusHtml='<span class="pill" style="background:#fff7ed;color:#9a3412">Sedang Bekerja • Shift Malam</span>';
+    }else if(!firstIn){
+      statusHtml='<span class="pill" style="background:#fef2f2;color:#b42318">Belum Absen</span>';
+    }else if(open){
+      statusHtml=`<span class="pill" style="background:#fff7ed;color:#9a3412">Belum Keluar • ${sessions.length} sesi</span>`;
+    }else{
+      // Jika hanya ada sesi hari ini, tampilkan hasil hari ini.
+      if(todayClosedSessions.length){
+        displayIn=todayClosedSessions[0].check_in;
+        displayOut=todayClosedSessions[todayClosedSessions.length-1].check_out;
+      }
+      statusHtml=`<span class="pill">Selesai • ${sessions.length} sesi</span>`;
+    }
+
+    return `<tr>
+      <td>${esc(emp.username||emp.employee_code||'')}</td>
+      <td>${esc(emp.full_name||'')}</td>
+      <td>${esc(emp.department||'')}</td>
+      <td>${displayIn?fmtTime(displayIn):'-'}</td>
+      <td>${displayOut?fmtTime(displayOut):'-'}</td>
+      <td>${fmtDurationSeconds(totalSeconds)}</td>
+      <td>${statusHtml}</td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="7">Belum ada karyawan aktif.</td></tr>';
+
+  const overnightCount=rows.filter(x=>x.hasOvernight).length;
+
+  msg(
+    'dashboardStatus',
+    `${active} karyawan aktif • ${inCount} sudah masuk • ${absent} belum absen • ${overnightCount} shift lintas tanggal • total ${fmtDurationSeconds(totalSeconds)}.`,
+    true
+  );
+}
+
+$('refreshDashboard').addEventListener('click',loadDashboard);
+
+
+async function loadAdminAccounts(){
+  if(!sb)return;
+
+  const {data,error}=await sb
+    .from('admin_users')
+    .select('user_id,email,full_name,active,created_at')
+    .order('created_at',{ascending:true});
+
+  if(error){
+    msg('adminAccountStatus','Gagal memuat akun admin: '+error.message,false);
+    return;
+  }
+
+  $('adminAccountBody').innerHTML=(data||[]).map(r=>`
+    <tr>
+      <td>${esc(r.full_name||'')}</td>
+      <td>${esc(r.email||'')}</td>
+      <td><span class="pill">${r.active?'Aktif':'Nonaktif'}</span></td>
+      <td>${r.created_at?new Date(r.created_at).toLocaleString('id-ID',{timeZone:'Asia/Jakarta'}):'-'}</td>
+    </tr>
+  `).join('')||'<tr><td colspan="4">Belum ada akun admin.</td></tr>';
+
+  msg('adminAccountStatus',(data||[]).length+' akun admin dimuat.',true);
+}
+
+$('reloadAdmins').addEventListener('click',loadAdminAccounts);
+
+$('createAdminAccount').addEventListener('click',async()=>{
+  if(!sb)return;
+
+  const fullName=$('newAdminName').value.trim();
+  const email=$('newAdminEmail').value.trim().toLowerCase();
+  const password=$('newAdminPassword').value;
+  const password2=$('newAdminPassword2').value;
+
+  if(!fullName){
+    msg('adminAccountStatus','Nama Admin wajib diisi.',false);
+    return;
+  }
+  if(!email || !email.includes('@')){
+    msg('adminAccountStatus','Email Admin tidak valid.',false);
+    return;
+  }
+  if(password.length<8){
+    msg('adminAccountStatus','Password minimal 8 karakter.',false);
+    return;
+  }
+  if(password!==password2){
+    msg('adminAccountStatus','Ulangi Password tidak sama.',false);
+    return;
+  }
+
+  $('createAdminAccount').disabled=true;
+  msg('adminAccountStatus','Membuat akun admin...',null);
+
+  try{
+    const {data,error}=await sb.functions.invoke('create-admin-user',{
+      body:{
+        full_name:fullName,
+        email,
+        password
+      }
+    });
+
+    if(error)throw error;
+    if(!data?.ok)throw new Error(data?.message||'Gagal membuat akun admin.');
+
+    ['newAdminName','newAdminEmail','newAdminPassword','newAdminPassword2']
+      .forEach(id=>$(id).value='');
+
+    msg('adminAccountStatus','Akun admin berhasil dibuat.',true);
+    await loadAdminAccounts();
+  }catch(e){
+    let detail=e?.message||String(e);
+    try{
+      if(e?.context){
+        const body=await e.context.json();
+        detail=body?.message||detail;
+      }
+    }catch{}
+    msg('adminAccountStatus','Gagal membuat akun admin: '+detail,false);
+  }finally{
+    $('createAdminAccount').disabled=false;
+  }
+});
+
+function commonUrl(){
+  const u=new URL(location.href);
+  u.search='?mode=absen';
+  u.hash='';
+  return u.toString();
+}
+
+$('makeCommonQr').addEventListener('click',async()=>{
+  const url=commonUrl();
+  $('commonQrUrl').textContent=url;
+  const box=$('commonQr'); box.innerHTML='';
+  try{
+    commonQrDataUrl=await QRCodeGen.toDataURL(url,{width:240,margin:2,errorCorrectionLevel:'M'});
+    const img=document.createElement('img');
+    img.src=commonQrDataUrl; img.alt='QR Umum Absensi';
+    box.appendChild(img);
+    const localhost=/localhost|127\.0\.0\.1/.test(location.hostname);
+    msg('commonQrStatus',
+      localhost
+        ? 'QR berhasil dibuat, tetapi masih alamat localhost. Buat ulang setelah aplikasi sudah online HTTPS.'
+        : 'QR Umum siap dipakai dan dicetak.',
+      !localhost
+    );
+  }catch(e){
+    msg('commonQrStatus','QR gagal dibuat: '+e.message,false);
+  }
+});
+
+$('downloadCommonQr').addEventListener('click',()=>{
+  if(!commonQrDataUrl){alert('Klik Buat QR Umum terlebih dahulu.');return}
+  const a=document.createElement('a');
+  a.download='QR-UMUM-ABSENSI.png';
+  a.href=commonQrDataUrl;
+  document.body.appendChild(a);a.click();a.remove();
+});
+
+
+// ===== MODUL TERPADU: SHIFT, IZIN/CUTI, KOREKSI, REKAP BULANAN, BACKUP =====
+let shiftRows=[];
+let scheduleRows=[];
+let dateScheduleRows=[];
+let rosterChanges=new Map();
+let leaveRows=[];
+let monthlyRows=[];
+let employeeCache=[];
+
+const dayName=n=>({1:'Senin',2:'Selasa',3:'Rabu',4:'Kamis',5:'Jumat',6:'Sabtu',7:'Minggu'}[Number(n)]||'-');
+const timeShort=v=>v?String(v).slice(0,5):'-';
+const timeSec=v=>v?String(v).slice(0,8):'';
+const localStamp=(date,time)=> date&&time ? `${date}T${time}+07:00` : null;
+
+async function refreshEmployeeSelectors(){
+  if(!sb)return;
+  const {data,error}=await sb.from('employees').select('id,username,employee_code,full_name,active').eq('active',true).order('full_name');
+  if(error)return;
+  employeeCache=data||[];
+  const opts=employeeCache.map(e=>`<option value="${e.id}">${esc(e.full_name)} (${esc(e.username||e.employee_code||'')})</option>`).join('');
+  ['leaveEmployee','corrEmployee'].forEach(id=>{ if($(id)) $(id).innerHTML=opts; });
+  if($('monthlyEmployee')) $('monthlyEmployee').innerHTML='<option value="">Semua Karyawan</option>'+opts;
+}
+
+async function loadShiftModule(){
+  await refreshEmployeeSelectors();
+  const sr=await sb.from('shifts').select('*').order('name');
+  if(sr.error){msg('shiftStatus','Gagal memuat shift: '+sr.error.message,false);return;}
+  shiftRows=sr.data||[];
+  renderShifts();
+  if($('rosterMonth') && !$('rosterMonth').value)$('rosterMonth').value=jakartaDateString().slice(0,7);
+  await loadMonthlyRoster();
+}
+
+function renderShifts(){
+  $('shiftBody').innerHTML=shiftRows.map(r=>`<tr>
+    <td>${esc(r.name)}</td><td>${timeShort(r.start_time)}</td><td>${timeShort(r.end_time)}</td>
+    <td>${Number(r.late_tolerance_minutes||0)} menit</td><td>${r.active?'Aktif':'Nonaktif'}</td>
+    <td><div class="actions"><button class="btn secondary" data-shift-edit="${r.id}">Edit</button><button class="btn secondary" data-shift-active="${r.id}" data-next="${!r.active}">${r.active?'Nonaktifkan':'Aktifkan'}</button></div></td>
+  </tr>`).join('')||'<tr><td colspan="6">Belum ada shift.</td></tr>';
+  document.querySelectorAll('[data-shift-edit]').forEach(b=>b.onclick=()=>editShift(b.dataset.shiftEdit));
+  document.querySelectorAll('[data-shift-active]').forEach(b=>b.onclick=()=>toggleShift(b.dataset.shiftActive,b.dataset.next==='true'));
+}
+
+function rosterDaysInMonth(month){
+  const [y,m]=month.split('-').map(Number);
+  return new Date(y,m,0).getDate();
+}
+function rosterDate(month,day){
+  return `${month}-${String(day).padStart(2,'0')}`;
+}
+function rosterKey(employeeId,date){
+  return `${employeeId}|${date}`;
+}
+function rosterShiftCode(shiftId){
+  const s=shiftRows.find(x=>x.id===shiftId);
+  return s?.name||'';
+}
+function rosterOptionHtml(value){
+  const active=shiftRows.filter(x=>x.active);
+  let html='<option value="">-</option>';
+  active.forEach(s=>{
+    const selected=value===s.id?' selected':'';
+    html+=`<option value="${s.id}"${selected}>${esc(s.name)}</option>`;
+  });
+  html+=`<option value="LIBUR"${value==='LIBUR'?' selected':''}>Libur</option>`;
+  return html;
+}
+async function loadMonthlyRoster(){
+  if(!$('rosterMonth'))return;
+  const month=$('rosterMonth').value||jakartaDateString().slice(0,7);
+  $('rosterMonth').value=month;
+  const [a,b]=monthBounds(month);
+  msg('scheduleStatus','Memuat jadwal bulanan...',null);
+  const res=await sb.from('employee_shift_date_schedule_view')
+    .select('*')
+    .gte('schedule_date',a)
+    .lte('schedule_date',b)
+    .order('full_name')
+    .order('schedule_date');
+  if(res.error){
+    msg('scheduleStatus','Gagal memuat jadwal bulanan: '+res.error.message,false);
+    return;
+  }
+  dateScheduleRows=res.data||[];
+  rosterChanges.clear();
+  renderMonthlyRoster();
+  msg('scheduleStatus',`${dateScheduleRows.length} jadwal tanggal dimuat.`,true);
+}
+function renderMonthlyRoster(){
+  const month=$('rosterMonth').value;
+  const days=rosterDaysInMonth(month);
+  const map=new Map(dateScheduleRows.map(r=>[rosterKey(r.employee_id,r.schedule_date),r]));
+  $('rosterHead').innerHTML='<tr><th>Karyawan</th>'+
+    Array.from({length:days},(_,i)=>`<th>${i+1}</th>`).join('')+'</tr>';
+  $('rosterBody').innerHTML=employeeCache.map(emp=>{
+    const cells=Array.from({length:days},(_,i)=>{
+      const date=rosterDate(month,i+1);
+      const row=map.get(rosterKey(emp.id,date));
+      const value=row ? (row.schedule_type==='LIBUR'?'LIBUR':(row.shift_id||'')) : '';
+      return `<td><select class="roster-select" data-emp="${emp.id}" data-date="${date}" data-original="${value}">${rosterOptionHtml(value)}</select></td>`;
+    }).join('');
+    return `<tr><td><b>${esc(emp.full_name)}</b><div class="small">${esc(emp.username||emp.employee_code||'')}</div></td>${cells}</tr>`;
+  }).join('')||'<tr><td>Tidak ada karyawan aktif.</td></tr>';
+
+  document.querySelectorAll('.roster-select').forEach(sel=>{
+    sel.addEventListener('change',()=>{
+      const key=rosterKey(sel.dataset.emp,sel.dataset.date);
+      if(sel.value===sel.dataset.original){
+        rosterChanges.delete(key);
+        sel.classList.remove('roster-changed');
+      }else{
+        rosterChanges.set(key,{
+          employee_id:sel.dataset.emp,
+          schedule_date:sel.dataset.date,
+          value:sel.value
+        });
+        sel.classList.add('roster-changed');
+      }
+      msg('scheduleStatus',`${rosterChanges.size} perubahan belum disimpan.`,null);
+    });
+  });
+}
+$('loadRoster').addEventListener('click',loadMonthlyRoster);
+$('rosterMonth').addEventListener('change',loadMonthlyRoster);
+$('clearRosterChanges').addEventListener('click',async()=>{
+  await loadMonthlyRoster();
+});
+$('saveRoster').addEventListener('click',async()=>{
+  if(!rosterChanges.size){
+    msg('scheduleStatus','Tidak ada perubahan jadwal.',true);
+    return;
+  }
+  $('saveRoster').disabled=true;
+  msg('scheduleStatus',`Menyimpan ${rosterChanges.size} perubahan...`,null);
+  let ok=0,fail=0,lastError='';
+  for(const item of rosterChanges.values()){
+    let res;
+    if(!item.value){
+      res=await sb.rpc('delete_employee_shift_date_schedule',{
+        p_employee_id:item.employee_id,
+        p_schedule_date:item.schedule_date
+      });
+    }else{
+      const isLibur=item.value==='LIBUR';
+      res=await sb.rpc('set_employee_shift_date_schedule',{
+        p_employee_id:item.employee_id,
+        p_schedule_date:item.schedule_date,
+        p_shift_id:isLibur?null:item.value,
+        p_schedule_type:isLibur?'LIBUR':'SHIFT',
+        p_notes:null
+      });
+    }
+    if(res.error || !res.data?.ok){
+      fail++;
+      lastError=res.error?.message||res.data?.message||'Gagal';
+    }else ok++;
+  }
+  $('saveRoster').disabled=false;
+  if(fail){
+    msg('scheduleStatus',`${ok} berhasil, ${fail} gagal. ${lastError}`,false);
+  }else{
+    msg('scheduleStatus',`${ok} perubahan jadwal berhasil disimpan.`,true);
+  }
+  await loadMonthlyRoster();
+});
+
+async function loadLeaveModule(){
+  await refreshEmployeeSelectors();
+  const {data,error}=await sb.from('employee_leaves_view').select('*').order('start_date',{ascending:false}).limit(500);
+  if(error){msg('leaveStatus','Gagal memuat data: '+error.message,false);return;}
+  leaveRows=data||[]; renderLeaves();
+  const d=jakartaDateString(); if(!$('leaveStart').value)$('leaveStart').value=d; if(!$('leaveEnd').value)$('leaveEnd').value=d;
+}
+function renderLeaves(){
+  $('leaveBody').innerHTML=leaveRows.map(r=>`<tr><td>${esc(r.full_name)}</td><td>${esc(r.leave_type)}</td><td>${r.start_date}</td><td>${r.end_date}</td><td>${esc(r.notes||'')}</td><td><div class="actions"><button class="btn secondary" data-leave-edit="${r.id}">Edit</button><button class="btn secondary" data-leave-del="${r.id}">Hapus</button></div></td></tr>`).join('')||'<tr><td colspan="6">Belum ada data.</td></tr>';
+  document.querySelectorAll('[data-leave-edit]').forEach(b=>b.onclick=()=>editLeave(b.dataset.leaveEdit));
+  document.querySelectorAll('[data-leave-del]').forEach(b=>b.onclick=()=>deleteLeave(b.dataset.leaveDel));
+}
+function editLeave(id){ const r=leaveRows.find(x=>x.id===id);if(!r)return;$('leaveEditId').value=id;$('leaveEmployee').value=r.employee_id;$('leaveType').value=r.leave_type;$('leaveStart').value=r.start_date;$('leaveEnd').value=r.end_date;$('leaveNotes').value=r.notes||'';msg('leaveStatus','Mode edit.',null); }
+$('resetLeave').addEventListener('click',()=>{ $('leaveEditId').value='';$('leaveNotes').value='';const d=jakartaDateString();$('leaveStart').value=d;$('leaveEnd').value=d;msg('leaveStatus','Form baru.',null); });
+$('saveLeave').addEventListener('click',async()=>{ const {data,error}=await sb.rpc('admin_upsert_leave',{p_leave_id:$('leaveEditId').value||null,p_employee_id:$('leaveEmployee').value,p_leave_type:$('leaveType').value,p_start_date:$('leaveStart').value,p_end_date:$('leaveEnd').value,p_notes:$('leaveNotes').value.trim()||null}); if(error||!data?.ok){msg('leaveStatus',error?.message||data?.message,false);return;} msg('leaveStatus',data.message,true);$('resetLeave').click();await loadLeaveModule(); });
+async function deleteLeave(id){if(!confirm('Hapus data izin/cuti ini?'))return;const {data,error}=await sb.rpc('admin_delete_leave',{p_leave_id:id});if(error||!data?.ok){alert(error?.message||data?.message);return;}await loadLeaveModule();}
+
+async function loadCorrectionModule(){
+  await refreshEmployeeSelectors();
+  if(!$('corrDateIn').value)$('corrDateIn').value=jakartaDateString();
+
+  const {data,error}=await sb.from('attendance_corrections_view')
+    .select('*')
+    .order('corrected_at',{ascending:false})
+    .limit(100);
+
+  if(error){
+    msg('corrStatus','Gagal memuat riwayat: '+error.message,false);
+    return;
+  }
+
+  $('correctionBody').innerHTML=(data||[]).map(r=>`<tr>
+    <td>${new Date(r.corrected_at).toLocaleString('id-ID',{timeZone:'Asia/Jakarta'})}</td>
+    <td>${esc(r.full_name)}</td>
+    <td>${r.work_date}</td>
+    <td>${timeSec(r.old_check_in_local)||'-'} / ${timeSec(r.old_check_out_local)||'-'}</td>
+    <td>${timeSec(r.new_check_in_local)||'-'} / ${timeSec(r.new_check_out_local)||'-'}</td>
+    <td>${esc(r.reason)}</td>
+  </tr>`).join('')||'<tr><td colspan="6">Belum ada koreksi.</td></tr>';
+}
+
+function jakartaDateFromTimestamp(v){
+  if(!v) return '';
+  const parts=new Intl.DateTimeFormat('en-CA',{
+    timeZone:'Asia/Jakarta',year:'numeric',month:'2-digit',day:'2-digit'
+  }).formatToParts(new Date(v));
+  const get=t=>parts.find(p=>p.type===t)?.value||'';
+  return `${get('year')}-${get('month')}-${get('day')}`;
+}
+
+function setCorrectionTimes(row){
+  $('corrIn').value=row?.check_in
+    ? new Intl.DateTimeFormat('en-GB',{
+        timeZone:'Asia/Jakarta',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'
+      }).format(new Date(row.check_in))
+    :'';
+
+  $('corrDateOut').value=row?.check_out
+    ? jakartaDateFromTimestamp(row.check_out)
+    : '';
+
+  $('corrOut').value=row?.check_out
+    ? new Intl.DateTimeFormat('en-GB',{
+        timeZone:'Asia/Jakarta',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'
+      }).format(new Date(row.check_out))
+    :'';
+}
+
+let correctionSessions=[];
+
+$('loadCorrection').addEventListener('click',async()=>{
+  const employeeId=$('corrEmployee').value;
+  const workDate=$('corrDateIn').value;
+
+  if(!employeeId||!workDate){
+    msg('corrStatus','Pilih karyawan dan Tanggal Masuk.',false);
+    return;
+  }
+
+  const {data,error}=await sb.from('attendance')
+    .select('id,check_in,check_out,notes')
+    .eq('employee_id',employeeId)
+    .eq('work_date',workDate)
+    .order('check_in',{ascending:true});
+
+  if(error){
+    msg('corrStatus',error.message,false);
+    return;
+  }
+
+  correctionSessions=data||[];
+
+  const options=['<option value="NEW">+ Buat sesi baru</option>'];
+  correctionSessions.forEach((r,i)=>{
+    const inTxt=r.check_in?fmtTime(r.check_in):'-';
+    const outTxt=r.check_out?fmtTime(r.check_out):'-';
+    options.push(`<option value="${r.id}">Sesi ${i+1}: ${inTxt} → ${outTxt}</option>`);
+  });
+
+  $('corrSession').innerHTML=options.join('');
+
+  if(correctionSessions.length){
+    $('corrSession').value=correctionSessions[0].id;
+    setCorrectionTimes(correctionSessions[0]);
+    msg('corrStatus',`${correctionSessions.length} sesi ditemukan. Pilih sesi yang ingin dikoreksi.`,true);
+  }else{
+    $('corrSession').value='NEW';
+    setCorrectionTimes(null);
+    msg('corrStatus','Belum ada sesi pada tanggal ini. Anda dapat membuat sesi baru.',true);
+  }
+});
+
+$('corrSession').addEventListener('change',()=>{
+  if($('corrSession').value==='NEW'){
+    setCorrectionTimes(null);
+    $('corrDateOut').value='';
+    return;
+  }
+  const row=correctionSessions.find(r=>r.id===$('corrSession').value);
+  setCorrectionTimes(row||null);
+});
+
+
+$('deleteCorrectionSession').addEventListener('click',async()=>{
+  const selected=$('corrSession').value;
+  const reason=$('corrReason').value.trim();
+
+  if(!selected || selected==='NEW'){
+    msg('corrStatus','Klik Muat Data lalu pilih sesi yang ingin dihapus.',false);
+    return;
+  }
+
+  if(!reason){
+    msg('corrStatus','Alasan penghapusan wajib diisi.',false);
+    return;
+  }
+
+  const row=correctionSessions.find(r=>r.id===selected);
+  const inTxt=row?.check_in?fmtTime(row.check_in):'-';
+  const outTxt=row?.check_out?fmtTime(row.check_out):'-';
+
+  const ok=confirm(
+    `Hapus sesi ini secara permanen?\n\n`+
+    `Masuk: ${inTxt}\nKeluar: ${outTxt}\n\n`+
+    `Sesi lain tidak akan diubah.`
+  );
+  if(!ok)return;
+
+  $('deleteCorrectionSession').disabled=true;
+  msg('corrStatus','Menghapus sesi...',null);
+
+  const {data,error}=await sb.rpc('admin_delete_attendance_session',{
+    p_attendance_id:selected,
+    p_reason:reason
+  });
+
+  $('deleteCorrectionSession').disabled=false;
+
+  if(error||!data?.ok){
+    msg('corrStatus',error?.message||data?.message||'Gagal menghapus sesi.',false);
+    return;
+  }
+
+  msg('corrStatus',data.message||'Sesi berhasil dihapus.',true);
+  $('corrReason').value='';
+  await loadCorrectionModule();
+  $('loadCorrection').click();
+});
+
+$('saveCorrection').addEventListener('click',async()=>{
+  const reason=$('corrReason').value.trim();
+  if(!reason){
+    msg('corrStatus','Alasan koreksi wajib diisi.',false);
+    return;
+  }
+
+  const selected=$('corrSession').value;
+  if(!selected){
+    msg('corrStatus','Klik Muat Data lalu pilih sesi yang ingin dikoreksi.',false);
+    return;
+  }
+
+  const dateIn=$('corrDateIn').value;
+  const dateOut=$('corrDateOut').value;
+  const timeIn=$('corrIn').value;
+  const timeOut=$('corrOut').value;
+
+  if(!dateIn){
+    msg('corrStatus','Tanggal Masuk wajib diisi.',false);
+    return;
+  }
+  if(timeOut && !dateOut){
+    msg('corrStatus','Tanggal Keluar wajib diisi jika Jam Keluar diisi.',false);
+    return;
+  }
+  if(dateOut && !timeOut){
+    msg('corrStatus','Jam Keluar wajib diisi jika Tanggal Keluar diisi.',false);
+    return;
+  }
+
+  const checkInStamp=localStamp(dateIn,timeIn);
+  const checkOutStamp=localStamp(dateOut,timeOut);
+
+  if(checkInStamp && checkOutStamp && new Date(checkOutStamp) <= new Date(checkInStamp)){
+    msg('corrStatus','Tanggal/Jam Keluar harus lebih akhir dari Tanggal/Jam Masuk.',false);
+    return;
+  }
+
+  const {data,error}=await sb.rpc('admin_correct_attendance_session',{
+    p_attendance_id:selected==='NEW'?null:selected,
+    p_employee_id:$('corrEmployee').value,
+    p_work_date:dateIn,
+    p_check_in:checkInStamp,
+    p_check_out:checkOutStamp,
+    p_reason:reason
+  });
+
+  if(error||!data?.ok){
+    msg('corrStatus',error?.message||data?.message,false);
+    return;
+  }
+
+  msg('corrStatus',data.message,true);
+  $('corrReason').value='';
+  await loadCorrectionModule();
+  $('loadCorrection').click();
+});
+
+async function prepareMonthlyModule(){
+  await refreshEmployeeSelectors();
+  if(!$('monthlyMonth').value)$('monthlyMonth').value=jakartaDateString().slice(0,7);
+}
+function monthBounds(m){ const [y,mo]=m.split('-').map(Number); const start=`${y}-${String(mo).padStart(2,'0')}-01`; const last=new Date(Date.UTC(y,mo,0)).getUTCDate(); return [start,`${y}-${String(mo).padStart(2,'0')}-${String(last).padStart(2,'0')}`]; }
+$('loadMonthly').addEventListener('click',loadMonthlyReport);
+async function loadMonthlyReport(){
+  const month=$('monthlyMonth').value;if(!month)return;
+  const [a,b]=monthBounds(month);
+  msg('monthlyStatus','Memuat rekap bulanan...',null);
+  const {data,error}=await sb.rpc('monthly_attendance_report_v2',{p_start_date:a,p_end_date:b,p_employee_id:$('monthlyEmployee').value||null});
+  if(error){msg('monthlyStatus','Gagal: '+error.message,false);return;}
+  monthlyRows=(data||[]).filter(r=>{
+    const hasAttendance=Number(r.session_count||0)>0 || !!r.check_in_local || !!r.check_out_local || Number(r.work_seconds||0)>0;
+    const hasSchedule=!!r.shift_name || !!r.scheduled_start || !!r.scheduled_end;
+    const st=String(r.day_status||'').trim().toLowerCase();
+    const specialStatus=st && st!=='tidak ada jadwal';
+    return hasAttendance || hasSchedule || specialStatus;
+  });
+  renderMonthly();msg('monthlyStatus',`${monthlyRows.length} baris relevan dimuat.`,true);
+}
+function monthlyOutDate(r){
+  if(!r.check_out_local)return '-';
+  // Jika RPC menyediakan timestamp/tanggal keluar, gunakan itu.
+  const raw=r.check_out||r.check_out_at||r.check_out_timestamp||null;
+  if(raw)return jakartaDateFromTimestamp(raw)||r.work_date;
+  // Untuk shift lintas tengah malam, jam keluar lebih kecil dari jam masuk => tanggal berikutnya.
+  if(r.check_in_local && r.check_out_local && String(r.check_out_local)<String(r.check_in_local)) return addDaysJakartaDate(r.work_date,1);
+  return r.work_date;
+}
+function renderMonthly(){
+  $('monthlyBody').innerHTML=monthlyRows.map(r=>`<tr><td>${r.work_date}</td><td>${esc(r.username||'')}</td><td>${esc(r.full_name)}</td><td>${esc(r.shift_name||'-')}</td><td>${esc((r.scheduled_start?String(r.scheduled_start).slice(0,8):'-')+(r.scheduled_end?' - '+String(r.scheduled_end).slice(0,8):''))}</td><td>${esc(r.check_in_local?String(r.check_in_local).slice(0,8):'-')}</td><td>${esc(monthlyOutDate(r))}</td><td>${esc(r.check_out_local?String(r.check_out_local).slice(0,8):'-')}</td><td>${fmtDurationSeconds(r.work_seconds||0)}</td><td>${Number(r.late_minutes||0)} mnt</td><td>${Number(r.overtime_minutes||0)} mnt</td><td>${Number(r.session_count||0)}</td><td>${esc(r.day_status||'-')}</td></tr>`).join('')||'<tr><td colspan="13">Tidak ada data.</td></tr>';
+  $('mmPresent').textContent=monthlyRows.filter(r=>r.check_in_local).length;
+  $('mmLate').textContent=monthlyRows.filter(r=>Number(r.late_minutes)>0).length;
+  $('mmLeave').textContent=monthlyRows.filter(r=>['Izin','Sakit','Cuti','Dinas','Libur'].includes(r.day_status)).length;
+  $('mmHours').textContent=fmtDurationSeconds(monthlyRows.reduce((a,r)=>a+Number(r.work_seconds||0),0));
+}
+$('monthlyExcel').addEventListener('click',async()=>{
+  if(!monthlyRows.length){alert('Tampilkan rekap terlebih dahulu.');return;}
+  if(!window.ExcelJS){alert('Library Excel belum termuat. Muat ulang halaman lalu coba lagi.');return;}
+
+  const workbook=new ExcelJS.Workbook();
+  workbook.creator='Klinik Pratama Universitas Advent Indonesia';
+  workbook.created=new Date();
+
+  const ws=workbook.addWorksheet('Rekap Bulanan',{
+    views:[{state:'frozen',ySplit:1,xSplit:0}]
+  });
+
+  ws.columns=[
+    {header:'Tanggal Masuk',key:'tanggal_masuk',width:15},
+    {header:'Username',key:'username',width:16},
+    {header:'Nama',key:'nama',width:30},
+    {header:'Bagian',key:'bagian',width:18},
+    {header:'Jabatan',key:'jabatan',width:20},
+    {header:'Shift',key:'shift',width:18},
+    {header:'Jadwal Masuk',key:'jadwal_masuk',width:14},
+    {header:'Jadwal Pulang',key:'jadwal_pulang',width:14},
+    {header:'Jam Masuk',key:'jam_masuk',width:14},
+    {header:'Tanggal Keluar',key:'tanggal_keluar',width:15},
+    {header:'Jam Keluar',key:'jam_keluar',width:14},
+    {header:'Durasi',key:'durasi',width:14},
+    {header:'Terlambat (menit)',key:'terlambat',width:19},
+    {header:'Pulang Cepat (menit)',key:'pulang_cepat',width:21},
+    {header:'Lembur (menit)',key:'lembur',width:16},
+    {header:'Jumlah Sesi',key:'sesi',width:14},
+    {header:'Status',key:'status',width:22}
+  ];
+
+  const toDisplayDate=v=>{
+    if(!v || v==='-')return '';
+    const p=String(v).slice(0,10).split('-');
+    return p.length===3 ? `${p[2]}/${p[1]}/${p[0]}` : String(v);
+  };
+
+  monthlyRows.forEach(r=>{
+    ws.addRow({
+      tanggal_masuk:toDisplayDate(r.work_date),
+      username:r.username||'',
+      nama:r.full_name||'',
+      bagian:r.department||'',
+      jabatan:r.position||'',
+      shift:r.shift_name||'',
+      jadwal_masuk:r.scheduled_start||'',
+      jadwal_pulang:r.scheduled_end||'',
+      jam_masuk:r.check_in_local||'',
+      tanggal_keluar:toDisplayDate(monthlyOutDate(r)),
+      jam_keluar:r.check_out_local||'',
+      durasi:fmtDurationSeconds(r.work_seconds||0),
+      terlambat:Number(r.late_minutes||0),
+      pulang_cepat:Number(r.early_leave_minutes||0),
+      lembur:Number(r.overtime_minutes||0),
+      sesi:Number(r.session_count||0),
+      status:r.day_status||''
+    });
+  });
+
+  // Header profesional
+  const header=ws.getRow(1);
+  header.height=24;
+  header.font={bold:true,color:{argb:'FFFFFFFF'}};
+  header.alignment={vertical:'middle',horizontal:'center',wrapText:true};
+  header.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF0F766E'}};
+
+  // Border, alignment, dan zebra rows
+  ws.eachRow((row,rowNumber)=>{
+    row.eachCell({includeEmpty:true},cell=>{
+      cell.border={
+        top:{style:'thin',color:{argb:'FFD0D5DD'}},
+        left:{style:'thin',color:{argb:'FFD0D5DD'}},
+        bottom:{style:'thin',color:{argb:'FFD0D5DD'}},
+        right:{style:'thin',color:{argb:'FFD0D5DD'}}
+      };
+      cell.alignment={vertical:'middle',wrapText:false};
+    });
+    if(rowNumber>1 && rowNumber%2===0){
+      row.eachCell({includeEmpty:true},cell=>{
+        cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF7FAFC'}};
+      });
+    }
+  });
+
+  // Kolom yang nyaman dibaca
+  ['A','G','H','I','J','K','L','M','N','O','P'].forEach(c=>{
+    ws.getColumn(c).alignment={horizontal:'center',vertical:'middle'};
+  });
+
+  // AutoFilter seluruh tabel
+  ws.autoFilter={
+    from:{row:1,column:1},
+    to:{row:Math.max(1,ws.rowCount),column:17}
+  };
+
+  // Tinggi baris data
+  for(let i=2;i<=ws.rowCount;i++)ws.getRow(i).height=19;
+
+  // Print setup jika dibuka/print dari Excel desktop
+  ws.pageSetup={
+    orientation:'landscape',
+    fitToPage:true,
+    fitToWidth:1,
+    fitToHeight:0,
+    paperSize:9,
+    margins:{left:0.25,right:0.25,top:0.5,bottom:0.5,header:0.2,footer:0.2}
+  };
+
+  const buffer=await workbook.xlsx.writeBuffer();
+  const blob=new Blob([buffer],{
+    type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  });
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`Rekap_Bulanan_${$('monthlyMonth').value}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1500);
+});
+$('monthlyPdf').addEventListener('click',()=>{
+  if(!monthlyRows.length){alert('Tampilkan rekap terlebih dahulu.');return;}
+  const {jsPDF}=window.jspdf; const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+  doc.setFontSize(13);doc.text('Rekap Absensi Bulanan - Klinik Pratama Universitas Advent Indonesia',14,12);doc.setFontSize(9);doc.text(`Periode: ${$('monthlyMonth').value} | Total jam: ${$('mmHours').textContent}`,14,18);
+  doc.autoTable({startY:22,head:[['Tgl Masuk','Username','Nama','Shift','Jam Masuk','Tgl Keluar','Jam Keluar','Durasi','Telat','Lembur','Sesi','Status']],body:monthlyRows.map(r=>[r.work_date,r.username||'',r.full_name,r.shift_name||'-',(r.check_in_local?String(r.check_in_local).slice(0,8):'-'),monthlyOutDate(r),(r.check_out_local?String(r.check_out_local).slice(0,8):'-'),fmtDurationSeconds(r.work_seconds||0),String(r.late_minutes||0),String(r.overtime_minutes||0),String(r.session_count||0),r.day_status||'-']),styles:{fontSize:7,cellPadding:1.4},headStyles:{fontStyle:'bold'}});
+  doc.save(`Rekap_Bulanan_${$('monthlyMonth').value}.pdf`);
+});
+
+async function collectBackup(){
+  const tables=['employees','attendance','shifts','employee_shift_schedules','employee_leaves','attendance_corrections','admin_users'];
+  const out={app:'Absensi Karyawan Klinik Pratama Universitas Advent Indonesia',created_at:new Date().toISOString(),data:{}};
+  for(const t of tables){ const {data,error}=await sb.from(t).select('*'); if(error)throw new Error(`${t}: ${error.message}`); out.data[t]=data||[]; }
+  return out;
+}
+$('backupJson').addEventListener('click',async()=>{ try{msg('backupStatus','Membuat backup...',null);const data=await collectBackup();const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`Backup_Absensi_${jakartaDateString()}.json`;a.click();URL.revokeObjectURL(a.href);msg('backupStatus','Backup JSON berhasil dibuat.',true);}catch(e){msg('backupStatus','Gagal backup: '+e.message,false);} });
+$('backupExcel').addEventListener('click',async()=>{ try{msg('backupStatus','Membuat backup Excel...',null);const b=await collectBackup();const wb=XLSX.utils.book_new();for(const [name,rows] of Object.entries(b.data)){const ws=XLSX.utils.json_to_sheet(rows);XLSX.utils.book_append_sheet(wb,ws,name.slice(0,31));}XLSX.writeFile(wb,`Backup_Absensi_${jakartaDateString()}.xlsx`);msg('backupStatus','Backup Excel berhasil dibuat.',true);}catch(e){msg('backupStatus','Gagal backup: '+e.message,false);} });
+
+
+const today=new Date().toISOString().slice(0,10);
+$('dateFrom').value=today.slice(0,8)+'01';
+$('dateTo').value=today;
+$('loadReport').addEventListener('click',loadReport);
+$('searchName').addEventListener('input',renderReport);
+
+async function loadReport(){
+  if(!sb)return;
+
+  let q=sb.from('attendance_report').select('*')
+    .gte('work_date',$('dateFrom').value)
+    .lte('work_date',$('dateTo').value)
+    .order('work_date',{ascending:false})
+    .order('check_in',{ascending:true});
+
+  const {data,error}=await q;
+
+  if(error){
+    $('reportBody').innerHTML=`<tr><td colspan="8">Login admin diperlukan / ${esc(error.message)}</td></tr>`;
+    return;
+  }
+
+  // Gabungkan seluruh sesi menjadi satu baris per karyawan per hari.
+  const groups=new Map();
+
+  (data||[]).forEach(r=>{
+    const key=`${r.work_date}|${r.employee_id||r.username||r.employee_code}`;
+    if(!groups.has(key)){
+      groups.set(key,{
+        ...r,
+        _sessions:[],
+        check_in:null,
+        check_out:null,
+        total_seconds:0,
+        session_count:0
+      });
+    }
+
+    const g=groups.get(key);
+    g._sessions.push(r);
+    g.session_count+=1;
+    g.total_seconds+=durationSeconds(r);
+
+    if(r.check_in && (!g.check_in || new Date(r.check_in)<new Date(g.check_in))){
+      g.check_in=r.check_in;
+    }
+    if(r.check_out && (!g.check_out || new Date(r.check_out)>new Date(g.check_out))){
+      g.check_out=r.check_out;
+    }
+  });
+
+  reportRows=Array.from(groups.values()).map(g=>({
+    ...g,
+    total_hours_hhmm:fmtDurationSeconds(g.total_seconds),
+    total_hours_decimal:g.total_seconds/3600,
+    notes:`${g.session_count} sesi`
+  }));
+
+  renderReport();
+}
+
+function renderReport(){
+  const s=$('searchName').value.toLowerCase().trim();
+  const rows=reportRows.filter(r=>!s||
+    String(r.full_name||'').toLowerCase().includes(s)||
+    String(r.username||r.employee_code||'').toLowerCase().includes(s));
+
+  $('reportBody').innerHTML=rows.map(r=>`
+    <tr>
+      <td>${r.work_date}</td>
+      <td>${esc(r.username||r.employee_code)}</td>
+      <td>${esc(r.full_name)}</td>
+      <td>${esc(r.department||'')}</td>
+      <td>${r.check_in?fmtTime(r.check_in):'-'}</td>
+      <td>${r.check_out?fmtTime(r.check_out):'-'}</td>
+      <td>${fmtDurationSeconds(Number(r.total_seconds||0))}</td>
+      <td>${Number(r.total_hours_decimal||0).toFixed(4)}</td>
+    </tr>`).join('')||'<tr><td colspan="8">Tidak ada data.</td></tr>';
+
+  $('mRows').textContent=rows.length;
+  const totalSeconds=rows.reduce((a,r)=>a+Number(r.total_seconds||0),0);
+  $('mHours').textContent=fmtDurationSeconds(totalSeconds);
+  $('mComplete').textContent=rows.filter(r=>r.check_in&&r.check_out).length;
+  $('mOpen').textContent=rows.filter(r=>r._sessions?.some(s=>s.check_in&&!s.check_out)).length;
+}
+
+$('exportExcel').addEventListener('click',()=>{
+  const s=$('searchName').value.toLowerCase().trim();
+  const rows=reportRows.filter(r=>!s||
+    String(r.full_name||'').toLowerCase().includes(s)||
+    String(r.username||r.employee_code||'').toLowerCase().includes(s));
+
+  if(!rows.length){
+    alert('Tidak ada data untuk diexport.');
+    return;
+  }
+
+  const headers=[
+    'Tanggal',
+    'Username',
+    'Nama',
+    'Bagian',
+    'Jabatan',
+    'Jam Masuk Pertama',
+    'Jam Keluar Terakhir',
+    'Jumlah Sesi',
+    'Total Durasi (HH:MM:SS)',
+    'Total Jam (Decimal)',
+    'Keterangan'
+  ];
+
+  const aoa=[headers];
+
+  rows.forEach(r=>{
+    aoa.push([
+      r.work_date,
+      r.username||r.employee_code||'',
+      r.full_name,
+      r.department||'',
+      r.position||'',
+      r.check_in?fmtTime(r.check_in):'-',
+      r.check_out?fmtTime(r.check_out):'-',
+      Number(r.session_count||0),
+      Number(r.total_seconds||0)/86400,
+      Number(r.total_hours_decimal||0),
+      `${Number(r.session_count||0)} sesi`
+    ]);
+  });
+
+  const totalRow=aoa.length+1;
+  aoa.push([
+    '','','','','','','',
+    '',
+    {f:`SUM(I2:I${totalRow-1})`},
+    {f:`SUM(J2:J${totalRow-1})`},
+    'TOTAL JAM KERJA'
+  ]);
+
+  const ws=XLSX.utils.aoa_to_sheet(aoa);
+
+  ws['!cols']=[
+    {wch:12},{wch:16},{wch:28},{wch:20},{wch:20},
+    {wch:18},{wch:18},{wch:12},{wch:24},{wch:20},{wch:18}
+  ];
+
+  for(let r=2;r<=totalRow;r++){
+    const cell=ws[`I${r}`];
+    if(cell){cell.t='n';cell.z='[h]:mm:ss';}
+  }
+
+  for(let r=2;r<=totalRow;r++){
+    const cell=ws[`J${r}`];
+    if(cell)cell.z='0.0000';
+  }
+
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Rekap Absensi');
+  XLSX.writeFile(wb,`Rekap_Absensi_${$('dateFrom').value}_sd_${$('dateTo').value}.xlsx`);
+});
+</script>
+</body>
+</html>
