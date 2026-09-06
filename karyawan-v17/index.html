@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#8bc53f">
+<title>V17 Absensi Karyawan UNAI - Prototype</title>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<style>
+:root{--green:#8bc53f;--green2:#78b52f;--dark:#303030;--red:#ff4d55;--text:#222;--muted:#777;--line:#e9e9e9}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f7f7f7;color:var(--text)}
+.app{max-width:520px;margin:0 auto;min-height:100vh;background:#fff;box-shadow:0 0 24px rgba(0,0,0,.07)}
+.top{background:var(--green);color:#fff;padding:18px 20px;font-size:26px;letter-spacing:1px;display:flex;align-items:center;justify-content:space-between;min-height:76px}
+.top button{border:0;background:transparent;color:white;font-size:32px}.brand{padding:34px 22px 28px;text-align:center;background:var(--green);color:white}
+.logo{width:110px;height:110px;border-radius:24px;object-fit:cover;background:white;padding:6px;box-shadow:0 4px 12px rgba(0,0,0,.13)}
+.brand h1{font-size:24px;margin:16px 0 4px}.brand p{margin:0;font-size:14px;opacity:.95}
+.page{display:none}.page.active{display:block}.menu{padding:18px}.menuBtn{width:100%;display:flex;gap:18px;align-items:center;padding:22px;border:0;border-bottom:1px solid var(--line);background:#fff;font-size:23px;letter-spacing:4px;text-align:left}.menuBtn .ico{font-size:34px;color:#888}.muted{color:var(--muted)}
+.dateBand{background:var(--green);color:#fff;text-align:center;padding:24px 10px;font-size:32px;font-weight:800;letter-spacing:2px}.scanWrap{padding:20px}.scanBox{background:var(--dark);min-height:280px;display:flex;align-items:center;justify-content:center;flex-direction:column;color:white;cursor:pointer}.scanIcon{font-size:56px;margin-bottom:18px}.scanText{font-size:26px;letter-spacing:1px}.hint{padding:16px;background:#f3f5f7;border-radius:10px;margin-top:16px;color:#555;line-height:1.5}
+#reader{width:100%;display:none}.record{padding:22px}.row{display:flex;gap:16px;align-items:flex-start;padding:18px 4px;border-bottom:1px solid var(--line)}.row .ico{font-size:28px;color:#8c8c8c;width:38px}.row b{display:block;margin-bottom:5px}.actions{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:28px 0}.btn{border:0;border-radius:6px;color:white;font-size:28px;letter-spacing:4px;padding:26px 10px;box-shadow:0 3px 8px rgba(0,0,0,.18)}.in{background:var(--green)}.out{background:var(--red)}
+.success{text-align:center;padding:48px 24px}.check{width:110px;height:110px;margin:0 auto 24px;border-radius:50%;background:var(--green);color:white;display:grid;place-items:center;font-size:68px}.success h2{color:#24903a;font-size:28px}.okBtn{width:100%;border:0;border-radius:8px;background:#079447;color:#fff;padding:16px;font-size:20px;margin-top:28px}.dev{margin:14px 18px 0;padding:10px 12px;border-radius:8px;background:#fff3cd;color:#7a5a00;font-size:12px;line-height:1.4}.cred{padding:20px}.cred input{width:100%;padding:15px;border:1px solid #ddd;border-radius:9px;font-size:18px;margin:6px 0 12px}.continue{width:100%;border:0;background:var(--green);color:white;font-size:20px;padding:16px;border-radius:8px}.small{font-size:13px;color:#666}
+@media(max-width:430px){.top{font-size:22px}.menuBtn{font-size:18px;letter-spacing:3px}.dateBand{font-size:27px}.scanText{font-size:22px}.btn{font-size:23px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div id="pHome" class="page active">
+    <div class="top"><span>HOME :: ABSENSI</span><span>⟳</span></div>
+    <div class="brand">
+      <img class="logo" src="../karyawan/icon-192.png" alt="Logo">
+      <h1>Absensi Karyawan</h1>
+      <p>Klinik Pratama Universitas Advent Indonesia</p>
+    </div>
+    <div class="dev">V17 PROTOTIPE TERPISAH — halaman ini tidak mengganti absensi karyawan yang sedang dipakai dan tombol MASUK/KELUAR pada prototipe ini belum menulis data ke database.</div>
+    <div class="menu">
+      <button class="menuBtn" onclick="go('pCred')"><span class="ico">▣</span><span>ABSENSI KERJA</span></button>
+    </div>
+  </div>
+
+  <div id="pCred" class="page">
+    <div class="top"><button onclick="go('pHome')">←</button><span>ABSENSI KERJA</span><span></span></div>
+    <div class="cred">
+      <h2>Identitas Karyawan</h2>
+      <p class="small">Untuk prototipe, isi username dan PIN seperti sistem sekarang. PIN hanya disimpan sementara selama halaman ini terbuka.</p>
+      <label>Username</label>
+      <input id="username" autocomplete="off" autocapitalize="none" placeholder="contoh: grace">
+      <label>PIN</label>
+      <input id="pin" type="password" inputmode="numeric" maxlength="6" placeholder="4–6 digit">
+      <button class="continue" onclick="saveCred()">LANJUT</button>
+    </div>
+  </div>
+
+  <div id="pScan" class="page">
+    <div class="top"><button onclick="stopScan();go('pCred')">←</button><span>ABSENSI KERJA</span><span>⟳</span></div>
+    <div class="dateBand" id="date1"></div>
+    <div class="scanWrap">
+      <div id="scanButton" class="scanBox" onclick="startScan()"><div class="scanIcon">▦</div><div class="scanText">KLIK UNTUK SCAN</div></div>
+      <div id="reader"></div>
+      <div class="hint">Arahkan kamera ke QR absensi yang ditempel di lokasi kerja. Setelah QR terbaca, aplikasi menampilkan pilihan MASUK atau KELUAR.</div>
+    </div>
+  </div>
+
+  <div id="pRecord" class="page">
+    <div class="top"><button onclick="go('pScan')">←</button><span>Record Absensi</span><span></span></div>
+    <div class="dateBand" id="date2"></div>
+    <div class="record">
+      <div class="row"><div class="ico">⌖</div><div><b>Lokasi</b><span>Klinik Pratama UNAI</span></div></div>
+      <div class="row"><div class="ico">●</div><div><b>Username</b><span id="recUser">-</span></div></div>
+      <div class="row"><div class="ico">▣</div><div><b>QR</b><span id="qrResult" class="muted">QR valid</span></div></div>
+      <div class="actions">
+        <button class="btn in" onclick="simulate('MASUK')">MASUK</button>
+        <button class="btn out" onclick="simulate('KELUAR')">KELUAR</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="pSuccess" class="page">
+    <div class="top"><button onclick="go('pRecord')">←</button><span>Record Absensi</span><span></span></div>
+    <div class="success">
+      <div class="check">✓</div>
+      <h2 id="successTitle">Berhasil</h2>
+      <div id="successTime" style="font-size:22px;font-weight:700"></div>
+      <p id="successUser"></p>
+      <p class="small">Mode prototipe: belum menyimpan absensi ke database.</p>
+      <button class="okBtn" onclick="go('pHome')">OK</button>
+    </div>
+  </div>
+</div>
+<script>
+let qrScanner=null;
+function go(id){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');setDates();}
+function setDates(){const d=new Date();const fmt=d.toLocaleDateString('id-ID',{timeZone:'Asia/Jakarta',day:'2-digit',month:'2-digit',year:'numeric'});document.querySelectorAll('#date1,#date2').forEach(x=>x.textContent=fmt);}
+function saveCred(){const u=document.getElementById('username').value.trim().toLowerCase();const p=document.getElementById('pin').value.trim();if(!/^[a-z0-9._-]{3,30}$/.test(u)||!/^\d{4,6}$/.test(p)){alert('Isi Username yang valid dan PIN 4–6 digit.');return;}sessionStorage.setItem('v17_user',u);sessionStorage.setItem('v17_pin',p);document.getElementById('recUser').textContent=u;go('pScan');}
+async function startScan(){if(!window.Html5Qrcode){alert('Pemindai QR belum siap. Muat ulang halaman.');return;}document.getElementById('scanButton').style.display='none';document.getElementById('reader').style.display='block';qrScanner=new Html5Qrcode('reader');try{await qrScanner.start({facingMode:'environment'},{fps:10,qrbox:{width:240,height:240}},txt=>{document.getElementById('qrResult').textContent=txt;stopScan();go('pRecord');},()=>{});}catch(e){alert('Kamera tidak dapat dibuka: '+e);document.getElementById('scanButton').style.display='flex';document.getElementById('reader').style.display='none';}}
+async function stopScan(){try{if(qrScanner&&qrScanner.isScanning)await qrScanner.stop();}catch{}qrScanner=null;const b=document.getElementById('scanButton');const r=document.getElementById('reader');if(b)b.style.display='flex';if(r)r.style.display='none';}
+function simulate(action){const u=sessionStorage.getItem('v17_user')||'-';const now=new Date();const date=now.toLocaleDateString('id-ID',{timeZone:'Asia/Jakarta',day:'2-digit',month:'2-digit',year:'numeric'});const time=now.toLocaleTimeString('id-ID',{timeZone:'Asia/Jakarta',hour:'2-digit',minute:'2-digit',second:'2-digit'});document.getElementById('successTitle').textContent='Berhasil Absen '+(action==='MASUK'?'Masuk':'Keluar')+'!';document.getElementById('successTime').textContent=date+' '+time;document.getElementById('successUser').textContent='Username: '+u;go('pSuccess');}
+setDates();
+</script>
+</body>
+</html>
