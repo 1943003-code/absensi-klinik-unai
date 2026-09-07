@@ -75,9 +75,22 @@ async function rpc(name,body){
  if(!r.ok)throw new Error(await r.text()); return await r.json();
 }
 async function searchDrugs(q=""){
+ if(!q){
+   drugs=[]; mono=null;
+   drug.innerHTML='<option value="">Ketik nama obat terlebih dahulu</option>';
+   rule.innerHTML='<option value="">—</option>';
+   form.innerHTML='<option value="">—</option>';
+   searchStatus.textContent="Silakan ketik nama obat untuk mencari.";
+   monoEl("Silakan cari dan pilih obat untuk melihat monograf terverifikasi.");
+   out.classList.add("hidden");
+   return;
+ }
  searchStatus.textContent="Mencari…";
- try{drugs=await rpc("drug_search",{q,limit_count:50}); drug.innerHTML=drugs.map(d=>`<option value="${d.id}">${d.generic_name}</option>`).join("");
- searchStatus.textContent=drugs.length+" obat ditemukan"; if(drugs.length) await loadMono(); else monoEl("Obat belum ada di database aktif.")}
+ try{drugs=await rpc("drug_search",{q,limit_count:50}); drug.innerHTML='<option value="">Pilih obat</option>'+drugs.map(d=>`<option value="${d.id}">${d.generic_name}</option>`).join("");
+ searchStatus.textContent=drugs.length+" obat ditemukan";
+ if(!drugs.length) monoEl("Obat belum ada di database aktif.");
+ else monoEl("Pilih salah satu obat dari daftar hasil pencarian.");
+ }
  catch(e){searchStatus.textContent="Gagal terhubung";monoEl("Kesalahan koneksi: "+e.message)}
 }
 async function loadMono(){
@@ -131,7 +144,7 @@ function calculate(){
 }
 function show(x){out.innerHTML=x;out.classList.remove("hidden")}
 let tm;search.addEventListener("input",()=>{clearTimeout(tm);tm=setTimeout(()=>searchDrugs(search.value.trim()),300)});
-drug.addEventListener("change",loadMono);rule.addEventListener("change",renderMono);calc.addEventListener("click",calculate);
+drug.addEventListener("change",()=>{ if(drug.value) loadMono(); else { mono=null; rule.innerHTML='<option value="">—</option>'; form.innerHTML='<option value="">—</option>'; monoEl("Pilih obat untuk melihat monograf terverifikasi."); }});rule.addEventListener("change",renderMono);calc.addEventListener("click",calculate);
 searchDrugs("");
 </script>
 </body></html>
