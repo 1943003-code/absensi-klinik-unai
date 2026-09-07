@@ -19,7 +19,7 @@ button{background:var(--b);color:white;border:0;font-weight:800;margin-top:12px}
 </style>
 </head>
 <body>
-<header><div class="wrap"><h1>💊 Kalkulator Dosis Obat Klinik Pratama UNAI</h1><div class="sub">Online • Supabase Global Drug Reference • verified-regimen only</div></div></header>
+<header><div class="wrap"><h1>💊 Kalkulator Dosis Obat Klinik Pratama UNAI</h1><div class="sub">Online • Referensi Obat Global Supabase • hanya regimen terverifikasi</div></div></header>
 <div class="wrap"><div class="warn" style="margin:12px">Pendukung perhitungan klinis, bukan pengganti keputusan dokter/apoteker. Periksa diagnosis, alergi, interaksi, fungsi ginjal/hati, kehamilan, dan pedoman lokal sebelum pemberian.</div></div>
 <main class="wrap">
 <section class="card">
@@ -53,6 +53,23 @@ let drugs=[],mono=null;
 
 function ageDays(){let a=+age.value||0,u=ageUnit.value;return u==="year"?a*365.25:u==="month"?a*30.4375:a}
 function fmt(n,d=2){return Number(n).toLocaleString("id-ID",{maximumFractionDigits:d})}
+function tPopulation(x){return ({pediatric:"Anak",adult:"Dewasa",infant:"Bayi",neonate:"Neonatus",geriatric:"Lansia",all:"Semua usia"})[x]||x||""}
+function tRoute(x){return ({Oral:"Oral",oral:"Oral",IV:"Intravena",IM:"Intramuskular",Topical:"Topikal",topical:"Topikal",Inhalation:"Inhalasi",inhalation:"Inhalasi"})[x]||x||""}
+function tRule(x){return ({mg_per_kg_per_dose:"mg/kgBB/dosis",mg_per_kg_per_day:"mg/kgBB/hari",fixed_dose:"Dosis tetap",mg_per_m2_per_dose:"mg/m²/dosis",mg_per_m2_per_day:"mg/m²/hari",weight_band:"Dosis berdasarkan berat badan",topical:"Topikal",reference_only:"Referensi saja"})[x]||x||""}
+function tForm(x){const m={"Oral suspension":"Suspensi oral","oral suspension":"Suspensi oral","Tablet":"Tablet","tablet":"Tablet","Capsule":"Kapsul","capsule":"Kapsul","Injection":"Injeksi","injection":"Injeksi","Cream":"Krim","cream":"Krim","Ointment":"Salep","ointment":"Salep","Nebulizer solution":"Larutan nebulizer","nebulizer solution":"Larutan nebulizer"};return m[x]||x||""}
+function tInstruction(x){
+ if(!x)return "";
+ return x
+ .replace(/Pain or fever in children 2–11 years/gi,"Nyeri atau demam pada anak usia 2–11 tahun")
+ .replace(/Repeat every 4 hours while symptoms last; do not give more than 5 times in 24 hours\./gi,"Ulangi setiap 4 jam selama gejala masih ada; jangan diberikan lebih dari 5 kali dalam 24 jam.")
+ .replace(/Use weight to dose when possible\./gi,"Gunakan berat badan untuk menentukan dosis bila memungkinkan.")
+ .replace(/Under 2 years: ask a doctor\./gi,"Usia di bawah 2 tahun: konsultasikan dengan dokter.")
+ .replace(/every ([0-9]+) hours/gi,"setiap $1 jam")
+ .replace(/once daily/gi,"1 kali sehari")
+ .replace(/twice daily/gi,"2 kali sehari")
+ .replace(/three times daily/gi,"3 kali sehari")
+ .replace(/four times daily/gi,"4 kali sehari");
+}
 async function rpc(name,body){
  const r=await fetch(URL+"/rest/v1/rpc/"+name,{method:"POST",headers:hdr,body:JSON.stringify(body)});
  if(!r.ok)throw new Error(await r.text()); return await r.json();
@@ -66,17 +83,17 @@ async function searchDrugs(q=""){
 async function loadMono(){
  if(!drug.value)return; mono=await rpc("drug_monograph",{p_drug_id:drug.value});
  const rules=mono?.rules||[],forms=mono?.formulations||[];
- rule.innerHTML=rules.map((r,i)=>`<option value="${i}">${r.indication||"Tanpa indikasi"} • ${r.population} • ${r.route}</option>`).join("");
- form.innerHTML=forms.map((f,i)=>`<option value="${i}">${f.dosage_form} ${f.strength_value??""} ${f.strength_unit??""}${f.volume_value?"/"+f.volume_value+" "+f.volume_unit:""}</option>`).join("");
+ rule.innerHTML=rules.map((r,i)=>`<option value="${i}">${tInstruction(r.indication||"Tanpa indikasi")} • ${tPopulation(r.population)} • ${tRoute(r.route)}</option>`).join("");
+ form.innerHTML=forms.map((f,i)=>`<option value="${i}">${tForm(f.dosage_form)} ${f.strength_value??""} ${f.strength_unit??""}${f.volume_value?"/"+f.volume_value+" "+f.volume_unit:""}</option>`).join("");
  renderMono();
 }
 function monoEl(x){document.getElementById("mono").innerHTML=x}
 function renderMono(){
  if(!mono)return;
  monoEl(`<div style="font-size:21px;font-weight:900;color:#172033">${mono.drug.generic_name}</div>
- <div>${mono.drug.drug_class||""}</div><div style="margin:8px 0"><span class="pill">VERIFIED ONLY</span></div>
- <b>Alias:</b> ${(mono.aliases||[]).map(a=>a.name).join(", ")||"—"}<br><br>
- <b>Regimen aktif:</b>${(mono.rules||[]).map(r=>`<div class="row"><b>${r.indication||"—"}</b><br>${r.rule_type} • ${r.dose_min??""}${r.dose_max&&r.dose_max!==r.dose_min?"–"+r.dose_max:""} ${r.dose_unit||""} • ${r.frequency_hours?"q"+r.frequency_hours+"h":""}<br><span class="small">${r.special_instructions||""}</span><br><a href="${r.source?.url||"#"}" target="_blank">${r.source?.title||r.source?.name||"Sumber"}</a></div>`).join("")||'<div class="warn">Belum ada regimen verified.</div>'}`);
+ <div>${mono.drug.drug_class||""}</div><div style="margin:8px 0"><span class="pill">TERVERIFIKASI</span></div>
+ <b>Nama lain:</b> ${(mono.aliases||[]).map(a=>a.name).join(", ")||"—"}<br><br>
+ <b>Regimen aktif:</b>${(mono.rules||[]).map(r=>`<div class="row"><b>${tInstruction(r.indication||"—")}</b><br>${tRule(r.rule_type)} • ${r.dose_min??""}${r.dose_max&&r.dose_max!==r.dose_min?"–"+r.dose_max:""} ${r.dose_unit||""} • ${r.frequency_hours?"setiap "+r.frequency_hours+" jam":""}<br><span class="small">${tInstruction(r.special_instructions||"")}</span><br><a href="${r.source?.url||"#"}" target="_blank">${r.source?.title||r.source?.name||"Sumber"}</a></div>`).join("")||'<div class="warn">Belum ada regimen terverifikasi.</div>'}`);
 }
 function convertDose(mg,f){
  if(!f||!Number.isFinite(mg))return "";
@@ -86,7 +103,7 @@ function convertDose(mg,f){
 }
 function calculate(){
  const r=mono?.rules?.[+rule.value],f=mono?.formulations?.[+form.value],w=+weight.value,ad=ageDays();
- if(!r) return show('<div class="warn bad">Tidak ada regimen verified untuk dihitung.</div>');
+ if(!r) return show('<div class="warn bad">Tidak ada regimen terverifikasi untuk dihitung.</div>');
  if(r.min_age_days!=null&&ad<r.min_age_days)return show('<div class="warn bad">Usia pasien di bawah batas regimen sumber.</div>');
  if(r.max_age_days!=null&&ad>r.max_age_days)return show('<div class="warn bad">Usia pasien di atas batas regimen sumber.</div>');
  if(r.min_weight_kg!=null&&w<r.min_weight_kg)return show('<div class="warn bad">BB di bawah batas regimen sumber.</div>');
@@ -100,7 +117,7 @@ function calculate(){
  } else if(r.rule_type==="mg_per_kg_per_day"){
    let dayLo=w*+r.dose_min,dayHi=w*+(r.dose_max??r.dose_min),n=+(r.doses_per_day||24/r.frequency_hours);
    let lo=dayLo/n,hi=dayHi/n;
-   html+=`<div class="kpi">${fmt(lo)}${hi!==lo?"–"+fmt(hi):""} mg/dosis</div><div class="small">Total ${fmt(dayLo)}${dayHi!==dayLo?"–"+fmt(dayHi):""} mg/hari ÷ ${fmt(n,0)} dosis • q${r.frequency_hours}h</div>`;
+   html+=`<div class="kpi">${fmt(lo)}${hi!==lo?"–"+fmt(hi):""} mg/dosis</div><div class="small">Total ${fmt(dayLo)}${dayHi!==dayLo?"–"+fmt(dayHi):""} mg/hari ÷ ${fmt(n,0)} dosis • setiap ${r.frequency_hours} jam</div>`;
    html+=`<div class="row">${convertDose(lo,f)}${hi!==lo?" – "+convertDose(hi,f):""}</div>`;
  } else if(r.rule_type==="weight_band"){
    const b=(r.weight_bands||[]).find(x=>w>=+x.min_weight_kg&&w<=+x.max_weight_kg);
@@ -109,7 +126,7 @@ function calculate(){
  } else if(r.rule_type==="topical"){
    html+=`<div class="kpi" style="font-size:22px">${r.topical?.application_amount_text||"Oles tipis"}</div><div class="small">${r.topical?.frequency_text||r.special_instructions||""}</div>`;
  } else return show('<div class="warn">Regimen ini ditampilkan sebagai referensi, bukan kalkulasi otomatis.</div>');
- html+=`<div class="warn"><b>Sumber:</b> ${r.source?.title||r.source?.name||"—"}<br>${r.special_instructions||""}</div>`;
+ html+=`<div class="warn"><b>Sumber:</b> ${r.source?.title||r.source?.name||"—"}<br>${tInstruction(r.special_instructions||"")}</div>`;
  show(html);
 }
 function show(x){out.innerHTML=x;out.classList.remove("hidden")}
