@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dosis Obat Klinik UNAI</title>
+<style>
+:root{--b:#2457d6;--bg:#f4f7fb;--c:#fff;--t:#172033;--m:#68758b;--l:#dde5ef;--ok:#087d4b;--w:#9a5a00;--bad:#b42318}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--t)}
+header{background:linear-gradient(135deg,#173c9f,var(--b));color:white;padding:20px}.wrap{max-width:1100px;margin:auto}
+h1{font-size:21px;margin:0}.sub{font-size:12px;opacity:.9;margin-top:4px}main{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:14px}
+.card{background:white;border:1px solid var(--l);border-radius:16px;padding:16px;box-shadow:0 5px 20px #27476d0d}
+label{display:block;font-size:12px;font-weight:700;color:#526078;margin:8px 0 5px}input,select,button{width:100%;padding:11px;border:1px solid #ccd6e3;border-radius:11px;font:inherit}
+button{background:var(--b);color:white;border:0;font-weight:800;margin-top:12px}.two{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.small{font-size:12px;color:var(--m);line-height:1.45}.result{margin-top:12px;background:#f7faff;border:1px solid #d9e6ff;border-radius:13px;padding:13px}
+.kpi{font-size:27px;font-weight:900;color:var(--b)}.pill{display:inline-block;padding:5px 8px;border-radius:999px;background:#e7f7ef;color:var(--ok);font-size:11px;font-weight:800}
+.warn{padding:10px;border-radius:10px;background:#fff2df;color:#7c4a00;font-size:12px;margin-top:9px}.bad{background:#ffeded;color:#842019}
+.row{padding:9px 0;border-bottom:1px dashed var(--l)}a{color:var(--b)}.hidden{display:none}
+@media(max-width:760px){main{grid-template-columns:1fr;padding:10px}.two{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><h1>💊 Kalkulator Dosis Obat Klinik Pratama UNAI</h1><div class="sub">Online • Supabase Global Drug Reference • verified-regimen only</div></div></header>
+<div class="wrap"><div class="warn" style="margin:12px">Pendukung perhitungan klinis, bukan pengganti keputusan dokter/apoteker. Periksa diagnosis, alergi, interaksi, fungsi ginjal/hati, kehamilan, dan pedoman lokal sebelum pemberian.</div></div>
+<main class="wrap">
+<section class="card">
+<h2 style="margin-top:0">Pasien & Obat</h2>
+<div class="two">
+<div><label>Usia</label><input id="age" type="number" value="5" min="0" step=".1"></div>
+<div><label>Satuan</label><select id="ageUnit"><option value="year">Tahun</option><option value="month">Bulan</option><option value="day">Hari</option></select></div>
+</div>
+<div class="two">
+<div><label>Berat badan (kg)</label><input id="weight" type="number" value="18" step=".1"></div>
+<div><label>Tinggi badan (cm)</label><input id="height" type="number" value="110" step=".1"></div>
+</div>
+<label>Cari obat</label><input id="search" placeholder="Amoxicillin / Amoksisilin">
+<div id="searchStatus" class="small"></div>
+<label>Pilih obat</label><select id="drug"></select>
+<label>Pilih indikasi / regimen</label><select id="rule"></select>
+<label>Pilih sediaan</label><select id="form"></select>
+<button id="calc">Hitung dosis sekali pemberian</button>
+<div id="out" class="result hidden"></div>
+</section>
+
+<section class="card">
+<h2 style="margin-top:0">Monograf Online</h2>
+<div id="mono" class="small">Memuat database Supabase…</div>
+</section>
+</main>
+<script>
+const URL='https://sjaoclliylmcucydltnk.supabase.co', KEY='sb_publishable_jt7TQ6B1hhKJzn5YUh8UUA_1XPHuYsx';
+const hdr={"apikey":KEY,"Authorization":"Bearer "+KEY,"Content-Type":"application/json"};
+let drugs=[],mono=null;
+
+function ageDays(){let a=+age.value||0,u=ageUnit.value;return u==="year"?a*365.25:u==="month"?a*30.4375:a}
+function fmt(n,d=2){return Number(n).toLocaleString("id-ID",{maximumFractionDigits:d})}
+async function rpc(name,body){
+ const r=await fetch(URL+"/rest/v1/rpc/"+name,{method:"POST",headers:hdr,body:JSON.stringify(body)});
+ if(!r.ok)throw new Error(await r.text()); return await r.json();
+}
+async function searchDrugs(q=""){
+ searchStatus.textContent="Mencari…";
+ try{drugs=await rpc("drug_search",{q,limit_count:50}); drug.innerHTML=drugs.map(d=>`<option value="${d.id}">${d.generic_name}</option>`).join("");
+ searchStatus.textContent=drugs.length+" obat ditemukan"; if(drugs.length) await loadMono(); else monoEl("Obat belum ada di database aktif.")}
+ catch(e){searchStatus.textContent="Gagal terhubung";monoEl("Kesalahan koneksi: "+e.message)}
+}
+async function loadMono(){
+ if(!drug.value)return; mono=await rpc("drug_monograph",{p_drug_id:drug.value});
+ const rules=mono?.rules||[],forms=mono?.formulations||[];
+ rule.innerHTML=rules.map((r,i)=>`<option value="${i}">${r.indication||"Tanpa indikasi"} • ${r.population} • ${r.route}</option>`).join("");
+ form.innerHTML=forms.map((f,i)=>`<option value="${i}">${f.dosage_form} ${f.strength_value??""} ${f.strength_unit??""}${f.volume_value?"/"+f.volume_value+" "+f.volume_unit:""}</option>`).join("");
+ renderMono();
+}
+function monoEl(x){document.getElementById("mono").innerHTML=x}
+function renderMono(){
+ if(!mono)return;
+ monoEl(`<div style="font-size:21px;font-weight:900;color:#172033">${mono.drug.generic_name}</div>
+ <div>${mono.drug.drug_class||""}</div><div style="margin:8px 0"><span class="pill">VERIFIED ONLY</span></div>
+ <b>Alias:</b> ${(mono.aliases||[]).map(a=>a.name).join(", ")||"—"}<br><br>
+ <b>Regimen aktif:</b>${(mono.rules||[]).map(r=>`<div class="row"><b>${r.indication||"—"}</b><br>${r.rule_type} • ${r.dose_min??""}${r.dose_max&&r.dose_max!==r.dose_min?"–"+r.dose_max:""} ${r.dose_unit||""} • ${r.frequency_hours?"q"+r.frequency_hours+"h":""}<br><span class="small">${r.special_instructions||""}</span><br><a href="${r.source?.url||"#"}" target="_blank">${r.source?.title||r.source?.name||"Sumber"}</a></div>`).join("")||'<div class="warn">Belum ada regimen verified.</div>'}`);
+}
+function convertDose(mg,f){
+ if(!f||!Number.isFinite(mg))return "";
+ if(f.concentration_mg_per_ml) return `<b>${fmt(mg/f.concentration_mg_per_ml)} mL</b> dari ${f.strength_value} mg/${f.volume_value} mL`;
+ if(f.strength_unit==="mg"&&f.strength_value) return `<b>${fmt(mg/f.strength_value)} unit tablet/kapsul</b> (nilai matematis; pembelahan harus diverifikasi)`;
+ return "";
+}
+function calculate(){
+ const r=mono?.rules?.[+rule.value],f=mono?.formulations?.[+form.value],w=+weight.value,ad=ageDays();
+ if(!r) return show('<div class="warn bad">Tidak ada regimen verified untuk dihitung.</div>');
+ if(r.min_age_days!=null&&ad<r.min_age_days)return show('<div class="warn bad">Usia pasien di bawah batas regimen sumber.</div>');
+ if(r.max_age_days!=null&&ad>r.max_age_days)return show('<div class="warn bad">Usia pasien di atas batas regimen sumber.</div>');
+ if(r.min_weight_kg!=null&&w<r.min_weight_kg)return show('<div class="warn bad">BB di bawah batas regimen sumber.</div>');
+ if(r.max_weight_kg!=null&&w>=r.max_weight_kg)return show('<div class="warn bad">BB di luar batas regimen sumber. Jangan ekstrapolasi otomatis.</div>');
+ let html='<span class="pill">DOSIS SEKALI PEMBERIAN</span><br>';
+ if(r.rule_type==="mg_per_kg_per_dose"){
+   let lo=w*+r.dose_min, hi=w*+(r.dose_max??r.dose_min);
+   if(r.max_single_dose){lo=Math.min(lo,+r.max_single_dose);hi=Math.min(hi,+r.max_single_dose)}
+   html+=`<div class="kpi">${fmt(lo)}${hi!==lo?"–"+fmt(hi):""} mg/dosis</div><div class="small">${r.frequency_hours?"setiap "+r.frequency_hours+" jam":""}</div>`;
+   html+=`<div class="row">${convertDose(lo,f)}${hi!==lo?" – "+convertDose(hi,f):""}</div>`;
+ } else if(r.rule_type==="mg_per_kg_per_day"){
+   let dayLo=w*+r.dose_min,dayHi=w*+(r.dose_max??r.dose_min),n=+(r.doses_per_day||24/r.frequency_hours);
+   let lo=dayLo/n,hi=dayHi/n;
+   html+=`<div class="kpi">${fmt(lo)}${hi!==lo?"–"+fmt(hi):""} mg/dosis</div><div class="small">Total ${fmt(dayLo)}${dayHi!==dayLo?"–"+fmt(dayHi):""} mg/hari ÷ ${fmt(n,0)} dosis • q${r.frequency_hours}h</div>`;
+   html+=`<div class="row">${convertDose(lo,f)}${hi!==lo?" – "+convertDose(hi,f):""}</div>`;
+ } else if(r.rule_type==="weight_band"){
+   const b=(r.weight_bands||[]).find(x=>w>=+x.min_weight_kg&&w<=+x.max_weight_kg);
+   if(!b)return show('<div class="warn bad">BB tidak ada dalam tabel dosis sumber; sistem tidak menebak.</div>');
+   html+=`<div class="kpi">${fmt(+b.dose_value)} ${b.dose_unit}</div><div class="small">${r.frequency_hours?"paling cepat tiap "+r.frequency_hours+" jam":""}</div>${convertDose(+b.dose_value,f)}`;
+ } else if(r.rule_type==="topical"){
+   html+=`<div class="kpi" style="font-size:22px">${r.topical?.application_amount_text||"Oles tipis"}</div><div class="small">${r.topical?.frequency_text||r.special_instructions||""}</div>`;
+ } else return show('<div class="warn">Regimen ini ditampilkan sebagai referensi, bukan kalkulasi otomatis.</div>');
+ html+=`<div class="warn"><b>Sumber:</b> ${r.source?.title||r.source?.name||"—"}<br>${r.special_instructions||""}</div>`;
+ show(html);
+}
+function show(x){out.innerHTML=x;out.classList.remove("hidden")}
+let tm;search.addEventListener("input",()=>{clearTimeout(tm);tm=setTimeout(()=>searchDrugs(search.value.trim()),300)});
+drug.addEventListener("change",loadMono);rule.addEventListener("change",renderMono);calc.addEventListener("click",calculate);
+searchDrugs("");
+</script>
+</body></html>
